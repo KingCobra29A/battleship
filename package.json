@@ -1,10 +1,15 @@
 {
   "name": "battleship",
   "version": "1.0.0",
+  "private": true,
   "description": "",
-  "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "watch": "webpack --watch",
+    "start": "webpack serve --open",
+    "build": "webpack",
+    "gh-deploy": "git push origin main :gh-pages && git subtree push --prefix dist origin gh-pages",
+    "gh-deploy-init": "git push origin main && git subtree push --prefix dist origin gh-pages"
   },
   "author": "",
   "license": "ISC",

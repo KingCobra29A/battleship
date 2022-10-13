@@ -38,6 +38,10 @@ const Gameboard = () => {
     };
   };
 
+  // occupiedForces, explodedForces will track game win conditions
+  let occupiedForces = 0;
+  let explodedForces = 0;
+
   // boardSize (length and width) used when initializing the board
   const boardSize = 10;
   // Board object is created by IIFE based on boardSize
@@ -144,6 +148,7 @@ const Gameboard = () => {
       checkCoordinates(length, startCoord, orientation);
       checkVacancy(length, startCoord, orientation);
       provisionAndAttachShip(shipType, startCoord, orientation);
+      occupiedForces += 1;
     } catch (e) {
       return e.message;
     }
@@ -159,7 +164,9 @@ const Gameboard = () => {
     const square = board[coord.row][coord.column];
     try {
       if (!square.status) throw new Error("Position was already attacked");
-      return square.blowUp();
+      const battleReport = square.blowUp();
+      if (battleReport.sunk) explodedForces += 1;
+      return battleReport;
     } catch (e) {
       return e.message;
     }
@@ -170,6 +177,9 @@ const Gameboard = () => {
     receiveAttack,
     get size() {
       return boardSize;
+    },
+    get checkForVictory() {
+      return occupiedForces === explodedForces;
     },
   };
 };

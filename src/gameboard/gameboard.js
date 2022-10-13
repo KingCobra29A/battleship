@@ -119,9 +119,9 @@ const Gameboard = () => {
     throw new Error("Placement is occupied");
   };
 
-  const provisionAndAttachShip = (length, coordinate, orientation) => {
-    const boatyMcBoatFace = Ship(length);
-    traverseBoard(length, coordinate, orientation, (square) => {
+  const provisionAndAttachShip = (shipType, coordinate, orientation) => {
+    const boatyMcBoatFace = Ship(shipType);
+    traverseBoard(shipTypes[shipType], coordinate, orientation, (square) => {
       square.occupy(boatyMcBoatFace);
     });
     return 0;
@@ -143,7 +143,7 @@ const Gameboard = () => {
     try {
       checkCoordinates(length, startCoord, orientation);
       checkVacancy(length, startCoord, orientation);
-      provisionAndAttachShip(length, startCoord, orientation);
+      provisionAndAttachShip(shipType, startCoord, orientation);
     } catch (e) {
       return e.message;
     }

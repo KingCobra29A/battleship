@@ -16,30 +16,23 @@ const Gameboard = () => {
     let shipPointer;
     let callback = () => "pasta";
 
-    const fill = () => {
-      isVacant = false;
-    };
-
-    const checkVacancy = () => isVacant;
-
     const blowUp = () => {
       intact = false;
     };
 
-    const stillIntact = () => intact;
-
-    const setCallback = (cbk) => {
-      callback = cbk;
-    };
-
     return {
-      fill,
-      checkVacancy,
       blowUp,
-      stillIntact,
-      setCallback,
+      get vacancy() {
+        return isVacant;
+      },
+      get status() {
+        return intact;
+      },
+      set occupy(ship) {
+        isVacant = false;
+        shipPointer = ship;
+      },
       callback,
-      shipPointer,
     };
   };
 
@@ -118,7 +111,7 @@ const Gameboard = () => {
   const checkVacancy = (length, coordinate, orientation) => {
     let vacancy = true;
     traverseBoard(length, coordinate, orientation, (square) => {
-      vacancy = vacancy && square.checkVacancy();
+      vacancy = vacancy && square.vacancy;
     });
     if (vacancy) return 0;
     throw new Error("Placement is occupied");
@@ -127,8 +120,7 @@ const Gameboard = () => {
   const provisionAndAttachShip = (length, coordinate, orientation) => {
     const boatyMcBoatFace = Ship(length);
     traverseBoard(length, coordinate, orientation, (square) => {
-      square.shipPointer = boatyMcBoatFace;
-      square.fill();
+      square.occupy = boatyMcBoatFace;
     });
     return 0;
   };

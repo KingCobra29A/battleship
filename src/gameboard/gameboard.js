@@ -1,14 +1,7 @@
 const Ship = require("../ship/ship");
+const shipTypes = require("../ship/shiptypes");
 
 const Gameboard = () => {
-  const shipTypes = {
-    carrier: 5,
-    battleship: 4,
-    destroyer: 3,
-    submarine: 3,
-    patrolboat: 2,
-  };
-
   // Todo: change methods to getters/setters
   const Square = () => {
     let isVacant = true;
@@ -34,13 +27,13 @@ const Gameboard = () => {
     };
 
     return {
-      blowUp,
       get vacancy() {
         return isVacant;
       },
       get status() {
         return intact;
       },
+      blowUp,
       occupy,
     };
   };
@@ -157,14 +150,10 @@ const Gameboard = () => {
     return true;
   };
 
-  /** check if coordinate has already been attacked
-   ** if shot already, throw error
-   ** if intact:
-   **   damage square
-   **   return battle report containing:
-   **     was the square occupied?
-   **     if so, was the ship destroyed
-   **       if so, what kind of ship?
+  /** Processes an attack on the passed coordinate
+   **   input parameter coord:         {row, column}
+   **   returns battle report object:  {hit, sunk, type}
+   **
    */
   const receiveAttack = (coord) => {
     const square = board[coord.row][coord.column];

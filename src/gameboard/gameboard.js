@@ -15,7 +15,7 @@ const Gameboard = () => {
         report.hit = shipPointer.hit();
         if (shipPointer.isSunk()) {
           report.sunk = true;
-          // TODO: return dead ship type
+          report.type = shipPointer.type;
         }
       }
       return report;

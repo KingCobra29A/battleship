@@ -14,10 +14,23 @@ const Gameboard = () => {
     let isVacant = true;
     let intact = true;
     let shipPointer;
-    let callback = () => "pasta";
 
     const blowUp = () => {
+      const report = { hit: false, sunk: false, type: "unknown" };
       intact = false;
+      if (!isVacant) {
+        report.hit = shipPointer.hit();
+        if (shipPointer.isSunk()) {
+          report.sunk = true;
+          // TODO: return dead ship type
+        }
+      }
+      return report;
+    };
+
+    const occupy = (ship) => {
+      isVacant = false;
+      shipPointer = ship;
     };
 
     return {
@@ -28,11 +41,7 @@ const Gameboard = () => {
       get status() {
         return intact;
       },
-      set occupy(ship) {
-        isVacant = false;
-        shipPointer = ship;
-      },
-      callback,
+      occupy,
     };
   };
 
@@ -120,7 +129,7 @@ const Gameboard = () => {
   const provisionAndAttachShip = (length, coordinate, orientation) => {
     const boatyMcBoatFace = Ship(length);
     traverseBoard(length, coordinate, orientation, (square) => {
-      square.occupy = boatyMcBoatFace;
+      square.occupy(boatyMcBoatFace);
     });
     return 0;
   };
@@ -132,7 +141,7 @@ const Gameboard = () => {
   //    fill squares with:
   //      callback for ship
   //      vacancy attribute
-  /* shipType enumeration: {carrier:5, battleship:4, destroyer:3, submarine:3, patrolboat:2}
+  /** shipType enumeration: {carrier:5, battleship:4, destroyer:3, submarine:3, patrolboat:2}
    ** startCoord: {row, column}
    ** orientation enumeration: horizontal, vertical
    */
@@ -148,7 +157,24 @@ const Gameboard = () => {
     return true;
   };
 
-  const receiveAttack = (row, column) => {};
+  /** check if coordinate has already been attacked
+   ** if shot already, throw error
+   ** if intact:
+   **   damage square
+   **   return battle report containing:
+   **     was the square occupied?
+   **     if so, was the ship destroyed
+   **       if so, what kind of ship?
+   */
+  const receiveAttack = (coord) => {
+    const square = board[coord.row][coord.column];
+    try {
+      if (!square.status) throw new Error("Position was already attacked");
+      return square.blowUp();
+    } catch (e) {
+      return e.message;
+    }
+  };
 
   return {
     placeShip,

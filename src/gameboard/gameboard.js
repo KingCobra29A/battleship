@@ -57,6 +57,11 @@ const Gameboard = () => {
     return boardObj;
   })();
 
+  // Error codes:
+  //  10 : Coordinates are outside of bounds
+  //  20 : Ship does not fit
+  //  30 : garbage inputs
+  //
   // lower order fn for placeShip
   const checkCoordinates = (length, coordinate, orientation) => {
     // check if starting coordinate is valid
@@ -65,20 +70,26 @@ const Gameboard = () => {
       coordinate.row > boardSize - 1 ||
       coordinate.column < 0 ||
       coordinate.column > boardSize - 1
-    )
-      return Promise.reject(new Error("Coordinates are outside of bounds"));
+    ) {
+      throw new Error("Coordinates are outside of bounds");
+    }
+
     // check if ship fits within bounds
     if (
       (orientation === "horizontal" &&
         coordinate.column + length > boardSize) ||
       (orientation === "vertical" && coordinate.row + length > boardSize)
-    )
-      return Promise.reject(new Error("Ship does not fit"));
+    ) {
+      throw new Error("Ship does not fit");
+    }
+
     // check if correct orientation was passed
-    if (orientation !== "horizontal" && orientation !== "vertical")
-      return Promise.reject(new Error("Invalid orientation"));
+    if (orientation !== "horizontal" && orientation !== "vertical") {
+      throw new Error("Garbage inputs");
+    }
+
     // No errors, so return resovled promise
-    return Promise.resolve("Coordinates are within bounds");
+    return 0;
   };
 
   // lower order fn which traverses the board, applies the callback to each square
@@ -102,26 +113,24 @@ const Gameboard = () => {
   };
 
   // lower order fn for placeShip
+  // returns 0 if placement is vacant
+  // returns 1 if placement is occupied
   const checkVacancy = (length, coordinate, orientation) => {
+    let vacancy = true;
     traverseBoard(length, coordinate, orientation, (square) => {
-      console.log(square.checkVacancy());
-      if (!square.checkVacancy()) {
-        console.log("Placement is already occupied");
-        return Promise.reject(new Error("Placement is already occupied"));
-      }
+      vacancy = vacancy && square.checkVacancy();
     });
-    console.log("Placement is possible");
-    return Promise.resolve("Placement is possible");
+    if (vacancy) return 0;
+    throw new Error("Placement is occupied");
   };
 
   const provisionAndAttachShip = (length, coordinate, orientation) => {
     const boatyMcBoatFace = Ship(length);
     traverseBoard(length, coordinate, orientation, (square) => {
       square.shipPointer = boatyMcBoatFace;
-      console.log(square.checkVacancy());
       square.fill();
     });
-    return Promise.resolve("Ship of length " + length + " was placed");
+    return 0;
   };
 
   // check if placement is possible
@@ -137,18 +146,14 @@ const Gameboard = () => {
    */
   const placeShip = (shipType, startCoord, orientation) => {
     const length = shipTypes[shipType];
-    let meow = checkCoordinates(length, startCoord, orientation)
-      .then(
-        () => checkVacancy(length, startCoord, orientation),
-        (err) => Promise.reject(err)
-      )
-      .then(
-        () => provisionAndAttachShip(length, startCoord, orientation),
-        (err) => Promise.reject(err)
-      )
-      .catch((error) => console.log(error.message));
-
-    return meow;
+    try {
+      checkCoordinates(length, startCoord, orientation);
+      checkVacancy(length, startCoord, orientation);
+      provisionAndAttachShip(length, startCoord, orientation);
+    } catch (e) {
+      return e.message;
+    }
+    return true;
   };
 
   const receiveAttack = (row, column) => {};
@@ -156,15 +161,10 @@ const Gameboard = () => {
   return {
     placeShip,
     receiveAttack,
+    get size() {
+      return boardSize;
+    },
   };
 };
-
-const testBoard = Gameboard();
-testBoard
-  .placeShip("battleship", { row: 0, column: 0 }, "horizontal")
-  .then((data) => console.log(data));
-testBoard
-  .placeShip("battleship", { row: 0, column: 0 }, "horizontal")
-  .then((data) => console.log(data));
 
 module.exports = Gameboard;

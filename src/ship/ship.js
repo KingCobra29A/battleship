@@ -1,5 +1,8 @@
-const Ship = (lengthIn) => {
-  const length = lengthIn;
+const shipTypes = require("./shiptypes");
+
+const Ship = (typeIn) => {
+  const shiptype = typeIn;
+  const length = shipTypes[shiptype];
   let hits = 0;
 
   const hit = () => {
@@ -18,6 +21,9 @@ const Ship = (lengthIn) => {
   return {
     hit,
     isSunk,
+    get type() {
+      return shiptype;
+    },
   };
 };
 

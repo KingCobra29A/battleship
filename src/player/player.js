@@ -1,4 +1,5 @@
 const shipTypes = require("../ship/shiptypes");
+const PubSub = require("../utilities/pubSub");
 
 const Player = (typeIn, playerBoard, enemyBoard) => {
   const type = typeIn;
@@ -65,7 +66,7 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
   //  will be removed from code base once algorithms are in place
   const placeShipsStaticly = () => {
     for (let i = 0; i < Object.keys(shipTypes).length; i += 1) {
-      const shiptype = shipTypes[Object.keys(shipTypes)[i]];
+      const shiptype = Object.keys(shipTypes)[i];
       garrison.placeShip(shiptype, passCoord(0, i), "vertical");
     }
   };
@@ -80,11 +81,42 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
     return Promise.resolve(true);
   };
 
+  // subscribe(eventName, callback)
+  async function waitForPlacement(shipEvent) {
+    const returnPromise = new Promise();
+    PubSub.subscribe(shipEvent, (data) => returnPromise.resolve(data));
+    return returnPromise;
+  }
+
+  const placeShipFromPromise = (shiptype, promiseIn) => {
+    garrison.placeShip(
+      shiptype,
+      promiseIn.value.coordinate,
+      promiseIn.value.orientation
+    );
+  };
+
   // Used by human player to place ships via UI
   //    pub/sub pattern is used here between View, Player
   const placeShipsUI = async () => {
-    placeShipsStaticly();
-    // TODO: actually do this based on user input
+    const carrierPromise = waitForPlacement("place-carrier");
+    const battleshipPromise = waitForPlacement("place-battleship");
+    const submarinePromise = waitForPlacement("place-submarine");
+    const destroyerPromise = waitForPlacement("place-destroyer");
+    const patrolboatPromise = waitForPlacement("place-patrolboat");
+
+    // Recieve placement of Carrier
+    await carrierPromise;
+    placeShipFromPromise("carrier", carrierPromise);
+    await battleshipPromise;
+    placeShipFromPromise("battleship", battleshipPromise);
+    await submarinePromise;
+    placeShipFromPromise("submarine", submarinePromise);
+    await destroyerPromise;
+    placeShipFromPromise("destroyer", destroyerPromise);
+    await patrolboatPromise;
+    placeShipFromPromise("patrolboat", patrolboatPromise);
+
     return Promise.resolve(true);
   };
 

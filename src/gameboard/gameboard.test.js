@@ -10,14 +10,15 @@ afterEach(() => {
   boardsize = null;
 });
 
-test("placeBoat method: happy, place boat in valid spot on empty board", () => {
+test("placeShip method: happy, place boat in valid spot on empty board", () => {
   const shipType = "battleship";
   const coordinate = { row: 0, column: 0 };
   const V = "vertical";
+  expect.assertions(1);
   expect(testBoard.placeShip(shipType, coordinate, V)).toBe(true);
 });
 
-test("placeBoat method: happy, place 5 adjacent vertical boats", () => {
+test("placeShip method: happy, place 5 adjacent vertical boats", () => {
   const shipType1 = "carrier";
   const shipType2 = "battleship";
   const shipType3 = "destroyer";
@@ -37,7 +38,7 @@ test("placeBoat method: happy, place 5 adjacent vertical boats", () => {
   expect(testBoard.placeShip(shipType5, coordinate5, V)).toBe(true);
 });
 
-test("placeBoat method: happy, place 5 adjacent boats, horizontal and vertical", () => {
+test("placeShip method: happy, place 5 adjacent boats, horizontal and vertical", () => {
   const shipType1 = "carrier";
   const shipType2 = "battleship";
   const shipType3 = "destroyer";
@@ -58,7 +59,7 @@ test("placeBoat method: happy, place 5 adjacent boats, horizontal and vertical",
   expect(testBoard.placeShip(shipType5, coordinate5, H)).toBe(true);
 });
 
-test("placeBoat method: happy, place 5 boats at the edge of the board", () => {
+test("placeShip method: happy, place 5 boats at the edge of the board", () => {
   const shipType1 = "carrier";
   const shipType2 = "battleship";
   const shipType3 = "destroyer";
@@ -79,7 +80,7 @@ test("placeBoat method: happy, place 5 boats at the edge of the board", () => {
   expect(testBoard.placeShip(shipType5, coordinate5, V)).toBe(true);
 });
 
-test("placeBoat method: unhappy, two boats overlap on starting coordinate only", () => {
+test("placeShip method: unhappy, two boats overlap on starting coordinate only", () => {
   const shipType1 = "carrier";
   const shipType2 = "battleship";
   const coordinate = { row: 0, column: 0 };
@@ -91,7 +92,7 @@ test("placeBoat method: unhappy, two boats overlap on starting coordinate only",
   expect(testBoard.placeShip(shipType2, coordinate, H)).toBe(err);
 });
 
-test("placeBoat method: unhappy, two boats overlap on final coordinate only", () => {
+test("placeShip method: unhappy, two boats overlap on final coordinate only", () => {
   const shipType1 = "carrier";
   const shipType2 = "battleship";
   const coordinate1 = { row: 0, column: 5 };
@@ -106,15 +107,15 @@ test("placeBoat method: unhappy, two boats overlap on final coordinate only", ()
   expect(testBoard.placeShip(shipType2, coordinate3, H)).toBe(err);
 });
 
-test("placeBoat method: unhappy, single boat is placed where it wont fit on board", () => {
+test("placeShip method: unhappy, single boat is placed where it wont fit on board", () => {
   const shipType = "carrier";
   const coordinate = { row: boardsize - 1, column: boardsize - 1 };
   const H = "horizontal";
-  const err = "Ship does not fit";
+  const err = "Object does not fit";
   expect(testBoard.placeShip(shipType, coordinate, H)).toBe(err);
 });
 
-test("placeBoat method: unhappy, starting coordinate is not on board", () => {
+test("placeShip method: unhappy, starting coordinate is not on board", () => {
   const shipType = "carrier";
   const coordinate1 = { row: boardsize, column: 9 };
   const coordinate2 = { row: 9, column: boardsize };

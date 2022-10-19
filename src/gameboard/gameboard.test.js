@@ -1,4 +1,7 @@
-const Gameboard = require("./gameboard");
+import Gameboard from "./gameboard";
+
+let testBoard;
+let boardsize;
 
 beforeEach(() => {
   testBoard = Gameboard();
@@ -6,7 +9,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  board = null;
+  testBoard = null;
   boardsize = null;
 });
 

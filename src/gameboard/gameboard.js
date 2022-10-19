@@ -1,6 +1,6 @@
-const Ship = require("../ship/ship");
-const shipTypes = require("../ship/shiptypes");
-const myArray = require("../utilities/myArray");
+import Ship from "../ship/ship";
+import shipTypes from "../ship/shiptypes";
+import myArray from "../utilities/myArray";
 
 const Gameboard = () => {
   // Todo: change methods to getters/setters
@@ -119,4 +119,4 @@ const Gameboard = () => {
   };
 };
 
-module.exports = Gameboard;
+export default Gameboard;

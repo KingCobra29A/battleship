@@ -64,4 +64,4 @@ const myArray = (sizeIn, populator) => {
   return array2D;
 };
 
-module.exports = myArray;
+export default myArray;

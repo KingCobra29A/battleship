@@ -1,5 +1,7 @@
-const Player = require("../player/player");
-const Board = require("../gameboard/gameboard");
+// const Player = require("../player/player");
+// const Board = require("../gameboard/gameboard");
+import Player from "../player/player";
+import Board from "../gameboard/gameboard";
 
 const GameLoop = async () => {
   const humanBoard = Board();
@@ -45,4 +47,4 @@ const GameLoop = async () => {
   return {};
 };
 
-module.exports = GameLoop;
+export default GameLoop;

@@ -1,7 +1,9 @@
-const ship = require("./ship");
+import Ship from "./ship";
+
+let shipInstance;
 
 beforeEach(() => {
-  shipInstance = ship("carrier");
+  shipInstance = Ship("carrier");
 });
 
 afterEach(() => {
@@ -9,6 +11,7 @@ afterEach(() => {
 });
 
 test("hit method: test return value", () => {
+  console.log(shipInstance.hit);
   expect(shipInstance.hit()).toBe(true);
 });
 

@@ -6,4 +6,4 @@ const shipTypes = {
   patrolboat: 2,
 };
 
-module.exports = shipTypes;
+export default shipTypes;

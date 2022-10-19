@@ -1,5 +1,7 @@
-const shipTypes = require("../ship/shiptypes");
-const PubSub = require("../utilities/pubSub");
+// const shipTypes = require("../ship/shiptypes");
+// const PubSub = require("../utilities/pubSub");
+import PubSub from "../utilities/pubSub";
+import shipTypes from "../ship/shiptypes";
 
 const Player = (typeIn, playerBoard, enemyBoard) => {
   const type = typeIn;
@@ -134,4 +136,4 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
   };
 };
 
-module.exports = Player;
+export default Player;

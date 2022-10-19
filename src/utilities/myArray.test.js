@@ -1,4 +1,4 @@
-const myArray = require("./myArray");
+import myArray from "./myArray";
 
 beforeEach(() => {});
 

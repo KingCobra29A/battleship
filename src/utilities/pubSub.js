@@ -23,4 +23,4 @@ const PubSub = (() => {
   };
 })();
 
-module.exports = PubSub;
+export default PubSub;

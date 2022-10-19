@@ -1,4 +1,4 @@
-const shipTypes = require("./shiptypes");
+import shipTypes from "./shiptypes";
 
 const Ship = (typeIn) => {
   const shiptype = typeIn;
@@ -27,4 +27,4 @@ const Ship = (typeIn) => {
   };
 };
 
-module.exports = Ship;
+export default Ship;

@@ -56,6 +56,9 @@ header {
   width: calc(var(--board-size) * 3 / 10);
   background-color: antiquewhite;
   margin: 10px auto auto auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .place-ship-control {
@@ -91,4 +94,8 @@ header {
 
 .invalid-placement {
   background-color: red;
+}
+
+.occupied {
+  background-color: brown;
 }

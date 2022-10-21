@@ -46,8 +46,8 @@ const view = (() => {
       for (let j = 0; j < size; j += 1) {
         const square = document.createElement("div");
         square.classList.add("grid-square");
-        square.setAttribute("row", i);
-        square.setAttribute("column", j);
+        square.setAttribute("data-row", i);
+        square.setAttribute("data-column", j);
         if (CBK) {
           square.addEventListener("mouseenter", (e) => CBK.cbk(e), {
             signal: CBK.signal,

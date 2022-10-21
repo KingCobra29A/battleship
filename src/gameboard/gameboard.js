@@ -49,8 +49,9 @@ const Gameboard = () => {
   // lower order fn for placeShip
   // returns 0 if placement is vacant
   // throws an error if occupied
-  const checkVacancy = (length, coordinate, orientation) => {
+  const checkVacancy = (type, coordinate, orientation) => {
     let vacancy = true;
+    const length = shipTypes[type];
     board.checkCoordinates(length, coordinate, orientation);
     board.traverseBoard(length, coordinate, orientation, (square) => {
       vacancy = vacancy && square.vacancy;
@@ -78,9 +79,8 @@ const Gameboard = () => {
    ** orientation enumeration: horizontal, vertical
    */
   const placeShip = (shipType, startCoord, orientation) => {
-    const length = shipTypes[shipType];
     try {
-      checkVacancy(length, startCoord, orientation);
+      checkVacancy(shipType, startCoord, orientation);
       provisionAndAttachShip(shipType, startCoord, orientation);
       occupiedForces += 1;
     } catch (e) {

@@ -1,5 +1,3 @@
-// const Player = require("../player/player");
-// const Board = require("../gameboard/gameboard");
 import Player from "../player/player";
 import Board from "../gameboard/gameboard";
 

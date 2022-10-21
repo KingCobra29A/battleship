@@ -1,5 +1,3 @@
-// const shipTypes = require("../ship/shiptypes");
-// const PubSub = require("../utilities/pubSub");
 import PubSub from "../utilities/pubSub";
 import shipTypes from "../ship/shiptypes";
 
@@ -83,22 +81,27 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
     return Promise.resolve(true);
   };
 
-  // subscribe(eventName, callback)
+  //  Subscription to "place-*****" event (passed as shipEvent)
+  //  Creates and returns a promise.
+  //  On shipEvent, The promise is resolved with the event payload
   async function waitForPlacement(shipEvent) {
-    const returnPromise = new Promise();
-    PubSub.subscribe(shipEvent, (data) => returnPromise.resolve(data));
-    return returnPromise;
+    // Create a promise
+    return new Promise((resolve) => {
+      // Subscribe to shipEvent. Resolve the promise when the event happens
+      PubSub.subscribe(shipEvent, (data) => {
+        resolve(data);
+      });
+    });
   }
 
+  //  Wrapper around GameBoard.placeShip
+  //    Makes a call to the method using a promise which contains the relevant parameters
   const placeShipFromPromise = (shiptype, promiseIn) => {
-    garrison.placeShip(
-      shiptype,
-      promiseIn.value.coordinate,
-      promiseIn.value.orientation
-    );
+    const { value } = promiseIn;
+    garrison.placeShip(shiptype, value.coordinate, value.orientation);
   };
 
-  // Used by human player to place ships via UI
+  //  Used by human player to place ships via UI
   //    pub/sub pattern is used here between View, Player
   const placeShipsUI = async () => {
     const carrierPromise = waitForPlacement("place-carrier");
@@ -110,12 +113,19 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
     // Recieve placement of Carrier
     await carrierPromise;
     placeShipFromPromise("carrier", carrierPromise);
+    console.log("CARRIER PLACED, BITCH");
+
     await battleshipPromise;
     placeShipFromPromise("battleship", battleshipPromise);
+    console.log("BATTLESHIP PLACED, BITCH");
+
     await submarinePromise;
     placeShipFromPromise("submarine", submarinePromise);
+    console.log("SUBMARINE PLACED, BITCH");
+
     await destroyerPromise;
     placeShipFromPromise("destroyer", destroyerPromise);
+
     await patrolboatPromise;
     placeShipFromPromise("patrolboat", patrolboatPromise);
 
@@ -129,6 +139,19 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
 
     return Promise.resolve(true);
   };
+
+  // TODO: get rid of IIFE
+  // TODO: move to init function of some kind
+  (function informDecisionSetup() {
+    PubSub.subscribe("place-ship-hover", (data) => {
+      try {
+        garrison.checkVacancy(data.type, data.coordinate, data.orientation);
+        PubSub.publish("place-ship-hover-result", 1);
+      } catch {
+        PubSub.publish("place-ship-hover-result", 0);
+      }
+    });
+  })();
 
   return {
     takeMove,

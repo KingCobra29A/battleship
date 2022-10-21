@@ -51,6 +51,7 @@ const Gameboard = () => {
   // throws an error if occupied
   const checkVacancy = (length, coordinate, orientation) => {
     let vacancy = true;
+    board.checkCoordinates(length, coordinate, orientation);
     board.traverseBoard(length, coordinate, orientation, (square) => {
       vacancy = vacancy && square.vacancy;
     });
@@ -79,7 +80,6 @@ const Gameboard = () => {
   const placeShip = (shipType, startCoord, orientation) => {
     const length = shipTypes[shipType];
     try {
-      board.checkCoordinates(length, startCoord, orientation);
       checkVacancy(length, startCoord, orientation);
       provisionAndAttachShip(shipType, startCoord, orientation);
       occupiedForces += 1;
@@ -108,6 +108,7 @@ const Gameboard = () => {
 
   return {
     placeShip,
+    checkVacancy,
     receiveAttack,
     get size() {
       return board.length;

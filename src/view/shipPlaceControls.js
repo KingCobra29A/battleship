@@ -25,10 +25,15 @@ function ShipPlaceControls() {
 
   function changeOrientationListener() {
     const btn = document.getElementById("orientation-btn");
-    btn.addEventListener("click", (e) => {
-      currentOrientation = currentOrientation === 0 ? 1 : 0;
-      e.target.innerText = orientations[currentOrientation];
-    });
+    const { signal } = hoverController;
+    btn.addEventListener(
+      "click",
+      (e) => {
+        currentOrientation = currentOrientation === 0 ? 1 : 0;
+        e.target.innerText = orientations[currentOrientation];
+      },
+      { signal }
+    );
   }
 
   // Helper function used in queryPlacement, init
@@ -147,7 +152,14 @@ function ShipPlaceControls() {
     });
   }
 
+  // Disables the event listeners assocaited with the ship placement controls
+  function disable() {
+    hoverController.abort();
+  }
+
   // Initializes the controls
+  // Subscribes to game-start event (inside of placeShipCanceler()),
+  //  which then handles disabling the controls
   function init() {
     displayPossibility();
     leaveSelectionWindowListener();
@@ -160,10 +172,6 @@ function ShipPlaceControls() {
     return { cbk: queryPlacement, signal: hoverController.signal };
   }
 
-  // Disables the event listeners assocaited with the ship placement controls
-  function disable() {
-    hoverController.abort();
-  }
   return {
     init,
     query,

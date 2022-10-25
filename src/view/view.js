@@ -18,7 +18,7 @@ import "./style/index.css";
  **    game-reset
  **    game-start
  **    game-won
- **    enemy-attack
+ **    enemy-attack-result
  **    player-attack-result
  */
 
@@ -66,65 +66,27 @@ const view = (() => {
     }
   }
 
-  // Asyncronous callback
-  // Happens on "game-reset" subscribe event
-  // Returns the view to the initial state
-  function gameReset() {
-    // initialize ship placement control object
-    const placeCntrl = ShipPlaceControls();
-    // Grid:
-    // clear grid
-    removeChildren(...waters);
-    // initialize grid
-    initGrid(document.querySelector(".allied-waters"), 10, placeCntrl.query());
-    initGrid(document.querySelector(".enemy-waters"), 10);
-    // add click, hover eventlisteners for placing ships
-    placeCntrl.init();
-    // Placement controls:
-    //    reset classes
-    //    display controls
-    //      enable event listeners:
-    //        change orientation
-    //        select ship
-    // Reset status variables ?
+  // Used in getAllSelectors
+  //  is passed an array: [row, column]
+  //  returns a css selector
+  function makeSelectorFromCoord(coord) {
+    const { row } = coord;
+    const { column } = coord;
+    return `.grid-square[data-row="${row}"].grid-square[data-column="${column}"]`;
   }
 
-  // HACK
-  // function initSelectPlacementTools() {
-  //   let carrierbtn = document.getElementById("place-carrier");
-  //   let battleshipbtn = document.getElementById("battleship-carrier");
-  //   let destroyerbtn = document.getElementById("destroyer-carrier");
-  //   let submarinebtn = document.getElementById("submarine-carrier");
-  //   let patrolboatbtn = document.getElementById("patrolboat-carrier");
-  //
-  //   carrierbtn.addEventListener("click", () => {
-  //     currentShipPlacement = "carrier";
-  //   });
-  //   battleshipbtn.addEventListener("click", () => {
-  //     currentShipPlacement = "battleship";
-  //   });
-  //   destroyerbtn.addEventListener("click", () => {
-  //     currentShipPlacement = "destroyer";
-  //   });
-  //   submarinebtn.addEventListener("click", () => {
-  //     currentShipPlacement = "submarine";
-  //   });
-  //   patrolboatbtn.addEventListener("click", () => {
-  //     currentShipPlacement = "patrolboat";
-  //   });
-  // }
-
-  gameReset();
-
-  // Asyncronous callback
-  // Happens on "enemy-attack" subscribe event
-  // Updates the DOM to display the enemy attack
-  function enemyAttack(payload) {}
-
-  // Asyncronous callback
-  // Happens on "enemy-attack" subscribe event
-  // Updates the DOM to display the enemy attack
-  function playerAttackResult(payload) {}
+  // Function-returning function to add "board" closure
+  //  returned "displayAttackResult" function:
+  //    happens on "enemy-attack-result" or "player-attack-result" event
+  //    updates the DOM to display the result of an attack
+  function attackResult(player) {
+    const board = player === "human" ? waters[0] : waters[1];
+    return function displayAttackResult(payload) {
+      const selector = makeSelectorFromCoord(payload);
+      const gridSquare = board.querySelector(selector);
+      gridSquare.classList.add("attacked");
+    };
+  }
 
   // Asynchronous callback
   // Happens on "game-start" subscribe event
@@ -136,10 +98,41 @@ const view = (() => {
     //    Enemy waters:
     //      add click eventlisteners to publish attacks
     //      subscribe to successful attacks, sunken ships
+    PubSub.subscribe("enemy-attack-result", attackResult("computer"));
     //    Allied waters:
     //      subscribe to "enemy-attack"
+    PubSub.subscribe("player-attack-result", attackResult("human"));
     //    Subscribe to game win/over
   }
+
+  // Asyncronous callback
+  // Happens on "game-reset" subscribe event
+  // Returns the view to the initial state
+  async function gameReset() {
+    // initialize ship placement control object
+    const placeCntrl = ShipPlaceControls();
+    // Grid:
+    // clear grid
+    removeChildren(...waters);
+    // initialize grid
+    initGrid(document.querySelector(".allied-waters"), 10, placeCntrl.query());
+    initGrid(document.querySelector(".enemy-waters"), 10);
+    // initialize the ship placement controls / event listeners
+    placeCntrl.init();
+    // subscribe to game-start event:
+    //    Create a promise
+    const gameStartIndication = new Promise((resolve) => {
+      //  Subscribe to game-start. Resolve the promise when the event happens
+      PubSub.subscribe("game-start", (data) => {
+        resolve(data);
+      });
+    });
+    await gameStartIndication;
+    placeCntrl.disable();
+    gameStart();
+  }
+
+  gameReset();
 
   // Asynchronous callback
   // Happens on "game-won" subscribe event

@@ -5,6 +5,8 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
   const type = typeIn;
   const garrison = playerBoard;
   const battlefield = enemyBoard;
+  const attackEvent =
+    type === "human" ? "player-attack-result" : "enemy-attack-result";
 
   // utility function for passing coordinates to gameboard
   //    passCoord(2,9) returns { row:2 , column:9 }
@@ -16,7 +18,13 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
     let pastMoves = [];
     let prevousMove;
     const checkMove = (coord) => {
-      if (pastMoves.includes(coord)) return false;
+      if (
+        pastMoves.some(
+          (element) =>
+            element.row === coord.row && element.column === coord.column
+        )
+      )
+        return false;
       return true;
     };
     const randomMove = () => {
@@ -30,7 +38,11 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
       } while (!checkMove(coord));
       return coord;
     };
-    const decideMove = () => Promise.resolve(randomMove());
+
+    const decideMove = () =>
+      new Promise((resolve) => {
+        setTimeout(() => resolve(randomMove()), 100);
+      });
 
     return {
       set remember(coord) {
@@ -41,9 +53,13 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
     };
   })();
 
+  function publishMove(coord) {
+    PubSub.publish(attackEvent, coord);
+  }
+
   // Used by human player to attack enemy board via UI
   //    pub/sub pattern is used here between View, Player
-  const decideMoveHuman = () => Promise.resolve(battlePlan.decideMove());
+  const decideMoveHuman = () => battlePlan.decideMove();
 
   // HACK Does not work as is.
   //  should not throw an error.needs to do own error handling.
@@ -53,10 +69,10 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
       type === "human" ? decideMoveHuman : battlePlan.decideMove;
     const attackCoord = await chooseAttackFn();
 
-    if (battlePlan.checkMove(attackCoord.value)) {
-      enemyBoard.receiveAttack(attackCoord.value);
-      battlePlan.remember(attackCoord.value);
-      // TODO publish event for view in order to display this attack
+    if (battlePlan.checkMove(attackCoord)) {
+      enemyBoard.receiveAttack(attackCoord);
+      battlePlan.remember = attackCoord;
+      publishMove(attackCoord);
       return Promise.resolve(true);
     }
     throw new Error("Repeat move");
@@ -88,7 +104,6 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
     // Create a promise
     return new Promise((resolve) => {
       // Subscribe to shipEvent. Resolve the promise when the event happens
-
       PubSub.subscribe(shipEvent, (data) => {
         resolve(data);
       });
@@ -118,21 +133,18 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
     // Recieve placement of Carrier
     placement = await carrierPromise;
     placeShipFromPromiseResult(placement);
-    console.log("CARRIER PLACED, BITCH");
 
     placement = await battleshipPromise;
     placeShipFromPromiseResult(placement);
-    console.log("BATTLESHIP PLACED, BITCH");
 
     placement = await destroyerPromise;
-    placeShipFromPromiseResult("destroyer", destroyerPromise);
-    console.log("Destroyer PLACED, BITCH");
+    placeShipFromPromiseResult(placement);
 
     placement = await submarinePromise;
-    placeShipFromPromiseResult("submarine", submarinePromise);
+    placeShipFromPromiseResult(placement);
 
     placement = await patrolboatPromise;
-    placeShipFromPromiseResult("patrolboat", patrolboatPromise);
+    placeShipFromPromiseResult(placement);
 
     return Promise.resolve(true);
   };

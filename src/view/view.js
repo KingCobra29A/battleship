@@ -80,11 +80,12 @@ const view = (() => {
   //    happens on "enemy-attack-result" or "player-attack-result" event
   //    updates the DOM to display the result of an attack
   function attackResult(player) {
-    const board = player === "human" ? waters[0] : waters[1];
+    const board = player === "human" ? waters[1] : waters[0];
     return function displayAttackResult(payload) {
-      const selector = makeSelectorFromCoord(payload);
+      const selector = makeSelectorFromCoord(payload.coord);
       const gridSquare = board.querySelector(selector);
-      gridSquare.classList.add("attacked");
+      const addClass = payload.hit === true ? "hit" : "miss";
+      gridSquare.classList.add(addClass);
     };
   }
 

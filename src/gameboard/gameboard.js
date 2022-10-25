@@ -99,9 +99,11 @@ const Gameboard = () => {
     try {
       if (!square.status) throw new Error("Position was already attacked");
       const battleReport = square.blowUp();
-      if (battleReport.sunk) explodedForces += 1;
+      battleReport.coord = coord;
+      if (battleReport.sunk === true) explodedForces += 1;
       return battleReport;
     } catch (e) {
+      console.log(e.message);
       return e.message;
     }
   };

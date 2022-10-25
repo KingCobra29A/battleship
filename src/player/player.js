@@ -53,8 +53,8 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
     };
   })();
 
-  function publishMove(coord) {
-    PubSub.publish(attackEvent, coord);
+  function publishMove(report) {
+    PubSub.publish(attackEvent, report);
   }
 
   // Used by human player to attack enemy board via UI
@@ -70,9 +70,9 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
     const attackCoord = await chooseAttackFn();
 
     if (battlePlan.checkMove(attackCoord)) {
-      enemyBoard.receiveAttack(attackCoord);
+      const report = battlefield.receiveAttack(attackCoord);
       battlePlan.remember = attackCoord;
-      publishMove(attackCoord);
+      publishMove(report);
       return Promise.resolve(true);
     }
     throw new Error("Repeat move");

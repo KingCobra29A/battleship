@@ -99,3 +99,7 @@ header {
 .occupied {
   background-color: brown;
 }
+
+.attacked {
+  background-color: black;
+}

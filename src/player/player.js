@@ -15,8 +15,11 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
   // battlePlan factory function is used by computer player
   //  is responsible for determining each move taken by AI
   const battlePlan = (() => {
-    let pastMoves = [];
-    let prevousMove;
+    const pastMoves = [];
+    let turnLatch = 1;
+    let turnPromise;
+    let turnPromiseResolver = () => {};
+
     const checkMove = (coord) => {
       if (
         pastMoves.some(
@@ -44,22 +47,55 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
         setTimeout(() => resolve(randomMove()), 100);
       });
 
+    //  Invoked on "player-attack" event
+    function resolveTurnPromise(coord) {
+      // if turn latch is "closed", do nothing
+      if (turnLatch === 1) {
+        turnPromiseResolver(coord);
+        // "close" turn latch
+        turnLatch = 0;
+      }
+    }
+
+    //  Used in decideHumanMove method
+    function resetTurnPromise() {
+      //  Overwrite old turn promise with new turn promise
+      turnPromise = new Promise((resolve) => {
+        //  make the resolver available to battlePlan root scope
+        //  this will be used by resolveTurnPromise on "player-attack" event
+        turnPromiseResolver = resolve;
+      });
+      //  "open" turn latch
+      turnLatch = 1;
+      //  return the (currently) unfulfilled promise
+      return turnPromise;
+    }
+
     return {
       set remember(coord) {
         pastMoves.push(coord);
       },
+      resetTurnPromise,
+      resolveTurnPromise,
       checkMove,
       decideMove,
     };
   })();
 
+  //  Used in takeMove method
+  //  Publishes the attackEvent (defined at root of Player object
+  //    attack event is either "player-attack-result" or "enemy-attack-result"
+  //  Notifies the View Module of the attack result so the DOM can be updated
   function publishMove(report) {
     PubSub.publish(attackEvent, report);
   }
 
-  // Used by human player to attack enemy board via UI
-  //    pub/sub pattern is used here between View, Player
-  const decideMoveHuman = () => battlePlan.decideMove();
+  //  Used by human player to attack enemy board via UI
+  //  Returns an unfulfilled promise
+  //    The promise is later resolved by battleplan.resolveTurnPromise on "player-attack" event
+  async function decideMoveHuman() {
+    return battlePlan.resetTurnPromise();
+  }
 
   // HACK Does not work as is.
   //  should not throw an error.needs to do own error handling.
@@ -71,7 +107,7 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
 
     if (battlePlan.checkMove(attackCoord)) {
       const report = battlefield.receiveAttack(attackCoord);
-      battlePlan.remember = attackCoord;
+      battlePlan.remember = attackCoord; // HACK, should be done directly in battlePlan
       publishMove(report);
       return Promise.resolve(true);
     }
@@ -157,9 +193,14 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
     return Promise.resolve(true);
   };
 
-  // TODO: get rid of IIFE
-  // TODO: move to init function of some kind
-  (function informDecisionSetup() {
+  /**
+   **  Publish Events:
+   **    place-ship-hover-result
+   **
+   **  Subscribe Events:
+   **     place-ship-hover
+   */
+  function initShipPlacementSubscriptions() {
     PubSub.subscribe("place-ship-hover", (data) => {
       try {
         garrison.checkVacancy(data.type, data.coordinate, data.orientation);
@@ -168,7 +209,36 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
         PubSub.publish("place-ship-hover-result", 0);
       }
     });
-  })();
+  }
+
+  /**
+   **  Publish Events:
+   **    none
+   **
+   **  Subscribe Events:
+   **     game-start
+   **     player-attack
+   */
+  function initTakeTurnSubscriptions() {
+    PubSub.subscribe("game-start", () => {
+      PubSub.subscribe("player-attack", (data) => {
+        //  Check to see if the square has already been attacked
+        if (battlePlan.checkMove(data)) {
+          //  attack is possible, resolve battlePlan.turnPromise
+          battlePlan.resolveTurnPromise(data);
+        }
+      });
+    });
+  }
+
+  function initEventSubscriptions() {
+    if (type === "human") {
+      initShipPlacementSubscriptions();
+      initTakeTurnSubscriptions();
+    }
+  }
+
+  initEventSubscriptions();
 
   return {
     takeMove,

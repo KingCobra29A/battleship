@@ -22,10 +22,10 @@ header {
   margin: auto;
 }
 
-.allied-waters {
-  background-color: aliceblue;
+.allied-waters .grid-square {
+  background-color: antiquewhite;
 }
-.enemy-waters {
+.enemy-waters .grid-square {
   background-color: lightcoral;
 }
 
@@ -91,18 +91,6 @@ header {
   width: calc(var(--board-size) / 5);
 }
 
-.valid-placement {
-  background-color: greenyellow;
-}
-
-.invalid-placement {
-  background-color: red;
-}
-
-.occupied {
-  background-color: brown;
-}
-
 .hit::after {
   content: "";
   width: 1rem;
@@ -117,4 +105,20 @@ header {
   height: 1rem;
   border-radius: 0.5rem;
   background-color: white;
+}
+
+.enemy-waters .grid-square:not(.hit):not(.miss):hover {
+  filter: brightness(0.75);
+}
+
+.grid-square.valid-placement {
+  background-color: greenyellow;
+}
+
+.grid-square.invalid-placement {
+  background-color: red;
+}
+
+.grid-square.occupied {
+  background-color: brown;
 }

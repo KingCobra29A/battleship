@@ -2,6 +2,7 @@ import PubSub from "../utilities/pubSub";
 import removeChildren from "../utilities/removeChildren";
 import GameLoop from "../gameloop/gameloop";
 import ShipPlaceControls from "./shipPlaceControls";
+import turnControls from "./takeTurnControls";
 import shipTypes from "../ship/shiptypes";
 import "./style/css-reset.css";
 import "./style/index.css";
@@ -18,26 +19,16 @@ import "./style/index.css";
  **    game-reset
  **    game-start
  **    game-won
+ **    player-attack-hover-result
  **    enemy-attack-result
  **    player-attack-result
  */
 
 const view = (() => {
-  const placeController = new AbortController();
-
-  const attackController = new AbortController();
   const waters = [
     document.querySelector(".allied-waters"),
     document.querySelector(".enemy-waters"),
   ];
-
-  let currentSquare;
-
-  function displayOnGrid(coordArray, displayType) {}
-
-  const setPlayerBoardCallbacks = (cbk, spaces) => {};
-
-  const setComputerBoardCallbacks = (cbk, spaces) => {};
 
   function initGrid(domElement, size, CBK) {
     for (let i = 0; i < size; i += 1) {
@@ -56,13 +47,6 @@ const view = (() => {
         row.appendChild(square);
       }
       domElement.appendChild(row);
-    }
-  }
-
-  function applyToSelection(selectorIn, callback) {
-    const nodes = document.querySelectorAll(selectorIn);
-    for (let i = 0; i < nodes.length; i += 1) {
-      callback(nodes[i]);
     }
   }
 
@@ -94,10 +78,11 @@ const view = (() => {
   // Prepares the view for the "Turn block" of the game loop
   function gameStart() {
     // Turn off display of ship placement controls
+    // Turn on controls for attacking enemy waters
+    const turnController = turnControls();
     // Grid:
     //    clear event listeners
     //    Enemy waters:
-    //      add click eventlisteners to publish attacks
     //      subscribe to successful attacks, sunken ships
     PubSub.subscribe("enemy-attack-result", attackResult("computer"));
     //    Allied waters:

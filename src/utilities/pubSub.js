@@ -1,5 +1,5 @@
 const PubSub = (() => {
-  const subscribers = {};
+  let subscribers = {};
 
   function publish(eventName, data) {
     if (!Array.isArray(subscribers[eventName])) {
@@ -17,9 +17,14 @@ const PubSub = (() => {
     subscribers[eventName].push(callback);
   }
 
+  function reset() {
+    subscribers = {};
+  }
+
   return {
     publish,
     subscribe,
+    reset,
   };
 })();
 

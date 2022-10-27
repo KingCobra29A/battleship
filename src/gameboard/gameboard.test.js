@@ -155,7 +155,7 @@ test("receiveAttack method: happy, place a patrol boat, then sink it", () => {
   expect(placement).toBe(true);
   expect(report1.hit && !report1.sunk).toBe(true);
   expect(report2.hit && report2.sunk).toBe(true);
-  expect(report1.type).toBe("unknown");
+  expect(report1.type).toBe(false);
   expect(report2.type).toBe("patrolboat");
 });
 
@@ -195,14 +195,16 @@ test("receiveAttack method: happy, sink a carrier", () => {
   const report3 = testBoard.receiveAttack(coordinate3);
   const report4 = testBoard.receiveAttack(coordinate4);
   const report5 = testBoard.receiveAttack(coordinate5);
-  expect.assertions(7);
+  expect.assertions(9);
   expect(report1.hit && !report1.sunk).toBe(true);
   expect(report2.hit && !report2.sunk).toBe(true);
   expect(report3.hit && !report3.sunk).toBe(true);
   expect(report4.hit && !report4.sunk).toBe(true);
   expect(report5.hit && report5.sunk).toBe(true);
-  expect(report4.type).toBe("unknown");
+  expect(report4.type).toBe(false);
+  expect(report4.graveyard).toBe(false);
   expect(report5.type).toBe("carrier");
+  expect(report5.graveyard.coordinate).toBe(coordinate1);
 });
 
 test("receiveAttack method: unhappy, attack same square twice", () => {

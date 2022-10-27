@@ -3,28 +3,30 @@ import shipTypes from "../ship/shiptypes";
 import myArray from "../utilities/myArray";
 
 const Gameboard = () => {
-  // Todo: change methods to getters/setters
   const Square = () => {
     let isVacant = true;
     let intact = true;
     let shipPointer;
+    let shipLocations; // { length, coordinate, orientation }
 
     const blowUp = () => {
-      const report = { hit: false, sunk: false, type: "unknown" };
+      const report = { hit: false, sunk: false, type: false, graveyard: false };
       intact = false;
       if (!isVacant) {
         report.hit = shipPointer.hit();
         if (shipPointer.isSunk()) {
           report.sunk = true;
           report.type = shipPointer.type;
+          report.graveyard = shipLocations;
         }
       }
       return report;
     };
 
-    const occupy = (ship) => {
+    const occupy = (ship, placementInfo) => {
       isVacant = false;
       shipPointer = ship;
+      shipLocations = placementInfo;
     };
 
     return {
@@ -61,9 +63,15 @@ const Gameboard = () => {
   };
 
   const provisionAndAttachShip = (shipType, coordinate, orientation) => {
+    //  Provision ship
     const boatyMcBoatFace = Ship(shipType);
-    const callback = (square) => square.occupy(boatyMcBoatFace);
-    board.traverseBoard(shipTypes[shipType], coordinate, orientation, callback);
+    //  Create placement object, which will be stored by the square object
+    const length = shipTypes[shipType];
+    const placement = { length, coordinate, orientation };
+    //  Create callback which will be applied to each relevant square to "attach" the ship
+    const callback = (square) => square.occupy(boatyMcBoatFace, placement);
+    //  Apply the callback to each square
+    board.traverseBoard(length, coordinate, orientation, callback);
     return 0;
   };
 

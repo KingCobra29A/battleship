@@ -3,6 +3,7 @@ import shipTypes from "../ship/shiptypes";
 import myArray from "../utilities/myArray";
 
 const Gameboard = () => {
+  // Todo: change methods to getters/setters
   const Square = () => {
     let isVacant = true;
     let intact = true;
@@ -63,14 +64,10 @@ const Gameboard = () => {
   };
 
   const provisionAndAttachShip = (shipType, coordinate, orientation) => {
-    //  Provision ship
     const boatyMcBoatFace = Ship(shipType);
-    //  Create placement object, which will be stored by the square object
     const length = shipTypes[shipType];
-    const placement = { length, coordinate, orientation };
-    //  Create callback which will be applied to each relevant square to "attach" the ship
-    const callback = (square) => square.occupy(boatyMcBoatFace, placement);
-    //  Apply the callback to each square
+    const placementInfo = { length, coordinate, orientation };
+    const callback = (square) => square.occupy(boatyMcBoatFace, placementInfo);
     board.traverseBoard(length, coordinate, orientation, callback);
     return 0;
   };

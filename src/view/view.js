@@ -3,6 +3,7 @@ import removeChildren from "../utilities/removeChildren";
 import GameLoop from "../gameloop/gameloop";
 import ShipPlaceControls from "./shipPlaceControls";
 import turnControls from "./takeTurnControls";
+import coordTools from "./coordSelectorTools";
 import shipTypes from "../ship/shiptypes";
 import "./style/css-reset.css";
 import "./style/index.css";
@@ -50,6 +51,24 @@ const view = (() => {
     }
   }
 
+  function displaySunkShip(victim, graveyard, type) {
+    const message = `${victim} player's ${type} was destroyed`;
+    const { length } = graveyard;
+    const { coordinate } = graveyard;
+    const { orientation } = graveyard;
+    const coordList = coordTools.getCoordinateList(
+      length,
+      coordinate,
+      orientation
+    );
+    const selector = coordTools.getAllSelectors(coordList);
+    const board = victim === "human" ? waters[0] : waters[1];
+    const elements = board.querySelectorAll(selector);
+    for (let i = 0; i < elements.length; i += 1) {
+      elements[i].classList.add("exploded");
+    }
+  }
+
   // Used in getAllSelectors
   //  is passed an array: [row, column]
   //  returns a css selector
@@ -69,8 +88,21 @@ const view = (() => {
       const selector = makeSelectorFromCoord(payload.coord);
       const gridSquare = board.querySelector(selector);
       const addClass = payload.hit === true ? "hit" : "miss";
+      if (payload.sunk) {
+        const victim = player === "human" ? "computer" : "human";
+        displaySunkShip(victim, payload.graveyard, payload.type);
+      }
       gridSquare.classList.add(addClass);
     };
+  }
+
+  // Asynchronous callback
+  // Happens on "game-won" subscribe event
+  // Ends the "Turn block", displays the winner
+  function gameComplete(winner) {
+    console.log(winner);
+    console.log(`MOTHER FUCKIN ${winner} WON`);
+    setTimeout(gameReset, 2000);
   }
 
   // Asynchronous callback
@@ -89,12 +121,16 @@ const view = (() => {
     //      subscribe to "enemy-attack"
     PubSub.subscribe("player-attack-result", attackResult("human"));
     //    Subscribe to game win/over
+    PubSub.subscribe("game-won", gameComplete);
   }
 
   // Asyncronous callback
   // Happens on "game-reset" subscribe event
   // Returns the view to the initial state
   async function gameReset() {
+    PubSub.reset();
+    GameLoop();
+
     // initialize ship placement control object
     const placeCntrl = ShipPlaceControls();
     // Grid:
@@ -120,11 +156,6 @@ const view = (() => {
 
   gameReset();
 
-  // Asynchronous callback
-  // Happens on "game-won" subscribe event
-  // Ends the "Turn block", displays the winner
-  function gameComplete() {}
-
   // // subscribe(eventName, callback)
   // async function waitForPlacement(shipEvent) {
   //   const returnPromise = new Promise();
@@ -134,5 +165,3 @@ const view = (() => {
 
   return {};
 })();
-
-const startGame = GameLoop();

@@ -26,31 +26,22 @@ const GameLoop = async () => {
   //    if won/lost, goto endgame
   //    else
   //      Next player goes
-  let turnNumber = 0;
   while (true) {
-    console.log(turnNumber);
     await human.takeMove();
     if (enemyBoard.checkForVictory) {
       // Human player won
-      console.log("Human won");
       break;
     }
-    console.log("Spaghetti");
     await enemy.takeMove();
     if (humanBoard.checkForVictory) {
-      // Human player won
-      console.log("computer won");
+      // Computer player won
       break;
     }
-    turnNumber += 1;
   }
-  console.log("GameOver");
 
   // ENDGAME BLOCK
-  const winner = enemyBoard.checkForVictory ? human : enemy;
-  const emitGameWonEvent = ((winningPlayer) => {})(winner);
-
-  return {};
+  const winner = enemyBoard.checkForVictory ? "human" : "computer";
+  PubSub.publish("game-won", winner);
 };
 
 export default GameLoop;

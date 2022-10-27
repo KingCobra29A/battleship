@@ -1,5 +1,6 @@
 import PubSub from "../utilities/pubSub";
 import getCoordFromElement from "./getCoordFromElement";
+import coordTools from "./coordSelectorTools";
 import shipTypes from "../ship/shiptypes";
 
 /*  Factory function
@@ -70,50 +71,16 @@ function ShipPlaceControls() {
     PubSub.publish("place-ship-hover", currentPlacementInfo);
   }
 
-  //  Used to create an array of coord arrays
-  //  ex: getcoordinateList(4, {row:0, column:0}, horizontal)
-  //    will return: [[0,0],[0,1],[0,2],[0,3]]
-  function getCoordinateList(length, coord, ori) {
-    const coords = [];
-    let { row } = coord;
-    let { column } = coord;
-    for (let i = 0; i < length; i += 1) {
-      coords.push([row, column]);
-      if (ori === "horizontal") {
-        column += 1;
-      } else {
-        row += 1;
-      }
-    }
-    return coords;
-  }
-
-  // Used in getAllSelectors
-  //  is passed an array: [row, column]
-  //  returns a css selector
-  function makeSelectorFromArray(coordArr) {
-    const row = coordArr[0];
-    const column = coordArr[1];
-    return `.grid-square[data-row="${row}"].grid-square[data-column="${column}"]`;
-  }
-
-  // Iterates through an array of coord arrays,
-  //   returns a css selector which will grab all relevant dom elements
-  function getAllSelectors(coordList) {
-    let selector = makeSelectorFromArray(coordList[0]);
-    const { length } = coordList;
-    for (let i = 1; i < length; i += 1) {
-      selector = `${selector},${makeSelectorFromArray(coordList[i])}`;
-    }
-    return selector;
-  }
-
   function setClassOnSquares(placement, classIn) {
-    const length = shipTypes[currentPlacementInfo.type];
-    const { orientation } = currentPlacementInfo;
-    const { coordinate } = currentPlacementInfo;
-    const coordList = getCoordinateList(length, coordinate, orientation);
-    const selector = getAllSelectors(coordList);
+    const length = shipTypes[placement.type];
+    const { orientation } = placement;
+    const { coordinate } = placement;
+    const coordList = coordTools.getCoordinateList(
+      length,
+      coordinate,
+      orientation
+    );
+    const selector = coordTools.getAllSelectors(coordList);
     const domElements = waters.querySelectorAll(selector);
     for (let i = 0; i < domElements.length; i += 1) {
       domElements[i].classList.add(classIn);
@@ -139,17 +106,24 @@ function ShipPlaceControls() {
   }
 
   function placeShipListener() {
-    waters.addEventListener("click", (e) => {
-      const { target } = e;
-      if (target.classList.contains("valid-placement")) {
-        PubSub.publish(
-          `place-${shipTypesArr[currentShipPlacement]}`,
-          currentPlacementInfo
-        );
-        currentShipPlacement += 1;
-        displayStatus("placed");
-      }
-    });
+    const { signal } = hoverController;
+    waters.addEventListener(
+      "click",
+      (e) => {
+        const { target } = e;
+        // HACK: This condition is not robust enough
+        if (target.classList.contains("valid-placement")) {
+          console.log(currentPlacementInfo);
+          PubSub.publish(
+            `place-${shipTypesArr[currentShipPlacement]}`,
+            currentPlacementInfo
+          );
+          currentShipPlacement += 1;
+          displayStatus("placed");
+        }
+      },
+      { signal }
+    );
   }
 
   // Disables the event listeners assocaited with the ship placement controls

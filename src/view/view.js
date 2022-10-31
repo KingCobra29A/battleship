@@ -30,6 +30,9 @@ const view = (() => {
     document.querySelector(".allied-waters"),
     document.querySelector(".enemy-waters"),
   ];
+  const messageOne = document.getElementById("message-one");
+  const messageTwo = document.getElementById("message-two");
+  const resetBtn = document.getElementById("reset-btn");
 
   function initGrid(domElement, size, CBK) {
     for (let i = 0; i < size; i += 1) {
@@ -51,6 +54,56 @@ const view = (() => {
     }
   }
 
+  function removeMessage(element) {
+    try {
+      element.removeChild(element.firstChild);
+    } catch {
+      /* no text node to remove */
+    }
+  }
+
+  function displayMessage(message, optionalDuration) {
+    const textnode = document.createTextNode(message);
+    console.log(message);
+    if (message === "") {
+      removeMessage(messageOne);
+      removeMessage(messageTwo);
+    } else if (optionalDuration) {
+      removeMessage(messageTwo);
+      messageTwo.classList.remove("opacity-zero");
+      messageTwo.appendChild(textnode);
+      setTimeout(() => {
+        if (messageTwo.firstChild === textnode) {
+          messageTwo.classList.add("opacity-zero");
+          setTimeout(() => {
+            try {
+              messageTwo.removeChild(textnode);
+            } catch {
+              /* */
+            }
+            messageTwo.classList.remove("opacity-zero");
+          }, 500);
+        }
+      }, optionalDuration);
+    } else {
+      console.log(messageOne);
+      removeMessage(messageOne);
+      messageOne.appendChild(textnode);
+    }
+  }
+
+  //  Shifts boards up if direction === true
+  //  Shifts boards down if direction === false
+  function shift(direction) {
+    if (direction === true) {
+      waters[0].classList.add("board-shift");
+      waters[1].classList.add("board-shift");
+    } else {
+      waters[0].classList.remove("board-shift");
+      waters[1].classList.remove("board-shift");
+    }
+  }
+
   function displaySunkShip(victim, graveyard, type) {
     const message = `${victim} player's ${type} was destroyed`;
     const { length } = graveyard;
@@ -67,6 +120,7 @@ const view = (() => {
     for (let i = 0; i < elements.length; i += 1) {
       elements[i].classList.add("exploded");
     }
+    displayMessage(message, 3000);
   }
 
   // Used in getAllSelectors
@@ -100,15 +154,22 @@ const view = (() => {
   // Happens on "game-won" subscribe event
   // Ends the "Turn block", displays the winner
   function gameComplete(winner) {
-    console.log(winner);
-    console.log(`MOTHER FUCKIN ${winner} WON`);
-    setTimeout(gameReset, 2000);
+    let message;
+    if (winner === "human") {
+      message = `VICTORY`;
+    } else {
+      message = `YOU LOSE`;
+    }
+    displayMessage(message);
+    resetBtn.classList.remove("display-disabled");
   }
 
   // Asynchronous callback
   // Happens on "game-start" subscribe event
   // Prepares the view for the "Turn block" of the game loop
   function gameStart() {
+    shift(false);
+    displayMessage("");
     // Turn off display of ship placement controls
     // Turn on controls for attacking enemy waters
     const turnController = turnControls();
@@ -128,8 +189,20 @@ const view = (() => {
   // Happens on "game-reset" subscribe event
   // Returns the view to the initial state
   async function gameReset() {
+    // Clear subscriptions
     PubSub.reset();
+    // Initialize a new game loop
     GameLoop();
+    // disable view of enemy board
+    shift(true);
+    // disable view of the reset button
+    resetBtn.classList.add("display-disabled");
+    // clear victory/gamelost message
+    displayMessage("");
+    // subsribe to display-message event
+    PubSub.subscribe("display-message", (data) =>
+      displayMessage(data.message, data.duration)
+    );
 
     // initialize ship placement control object
     const placeCntrl = ShipPlaceControls();
@@ -137,8 +210,8 @@ const view = (() => {
     // clear grid
     removeChildren(...waters);
     // initialize grid
-    initGrid(document.querySelector(".allied-waters"), 10, placeCntrl.query());
-    initGrid(document.querySelector(".enemy-waters"), 10);
+    initGrid(waters[0], 10, placeCntrl.query());
+    initGrid(waters[1], 10);
     // initialize the ship placement controls / event listeners
     placeCntrl.init();
     // subscribe to game-start event:
@@ -156,12 +229,22 @@ const view = (() => {
 
   gameReset();
 
-  // // subscribe(eventName, callback)
-  // async function waitForPlacement(shipEvent) {
-  //   const returnPromise = new Promise();
-  //   PubSub.subscribe(shipEvent, (data) => returnPromise.resolve(data));
-  //   return returnPromise;
-  // }
+  //  Transition effect is add 1 second after initializing view (done in init)
+  //  This is done so that the initial shift is not visible
+  function addTransition() {
+    waters[0].classList.add("board-shift-transition");
+    waters[1].classList.add("board-shift-transition");
+  }
+
+  function initResetBtn() {
+    resetBtn.addEventListener("click", () => gameReset());
+  }
+
+  // IIFE is used on init
+  (function init() {
+    setTimeout(addTransition, 1000);
+    initResetBtn();
+  })();
 
   return {};
 })();

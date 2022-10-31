@@ -9,24 +9,27 @@
 </head>
 
 <body>
-  <header></header>
+  <header>BATTLESHIP</header>
   <div class="game-wrapper">
-    <div id="board-wrapper">
-      <div class="allied-waters"></div>
-      <div class="enemy-waters"></div>
-    </div>
     <div id="controls-wrapper">
+      <div id="message-center">
+        <div id="message-one"></div>
+        <div id="message-two"></div>
+      </div>
       <div id="placement-controls">
         <div id="place-carrier" class="place-ship-control"></div>
-        <div id="place-battleship" class="place-ship-control"></div>
-        <div id="place-destroyer" class="place-ship-control"></div>
-        <div id="place-submarine" class="place-ship-control"></div>
-        <div id="place-patrolboat" class="place-ship-control"></div>
+        <div id="place-battleship" class="place-ship-control display-disabled"></div>
+        <div id="place-destroyer" class="place-ship-control display-disabled"></div>
+        <div id="place-submarine" class="place-ship-control display-disabled"></div>
+        <div id="place-patrolboat" class="place-ship-control display-disabled"></div>
         <div id="orientation-btn">horizontal</div>
       </div>
-
+      <div id="reset-btn" class="display-disabled">Play again</div>
     </div>
-
+    <div id="board-wrapper">
+      <div class="enemy-waters board-shift"></div>
+      <div class="allied-waters board-shift"></div>      
+    </div>
   </div>
 </body>
 

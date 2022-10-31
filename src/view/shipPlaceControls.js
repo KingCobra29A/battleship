@@ -2,6 +2,7 @@ import PubSub from "../utilities/pubSub";
 import getCoordFromElement from "./getCoordFromElement";
 import coordTools from "./coordSelectorTools";
 import shipTypes from "../ship/shiptypes";
+import { doc } from "prettier";
 
 /*  Factory function
  ** Returns a controller to handle the ship placement controls
@@ -21,8 +22,17 @@ function ShipPlaceControls() {
     "patrolboat",
   ];
   let currentShipPlacement = 0;
+  const controlDomElements = document.querySelectorAll(".place-ship-control");
   const orientations = ["horizontal", "vertical"];
   let currentOrientation = 0;
+  let placeShipLatch = false;
+
+  function displayShipPlacementMessage() {
+    if (currentShipPlacement < shipTypesArr.length) {
+      const message = `Place your ${shipTypesArr[currentShipPlacement]}`;
+      PubSub.publish("display-message", { message, duration: false });
+    }
+  }
 
   function changeOrientationListener() {
     const btn = document.getElementById("orientation-btn");
@@ -101,8 +111,41 @@ function ShipPlaceControls() {
     PubSub.subscribe("place-ship-hover-result", (result) => {
       if (result) {
         displayStatus("query");
-      } else currentSquare.classList.add("invalid-placement");
+        placeShipLatch = true;
+      } else {
+        placeShipLatch = false;
+        currentSquare.classList.add("invalid-placement");
+      }
     });
+  }
+
+  function enableView() {
+    const element = document.getElementById("placement-controls");
+    element.classList.remove("display-disabled", "opacity-zero");
+    updatePlaceShipControlsView();
+  }
+
+  function disableView() {
+    const element = document.getElementById("placement-controls");
+    element.classList.add("opacity-zero");
+    setTimeout(() => element.classList.add("display-disabled"), 1000);
+  }
+
+  // Used in placeShipListener
+  // Updates the view to show which controls are currently relevant
+  //    Changes which ship is being shown in controls
+  //    Removes the controls entirely when all ships are placed
+  function updatePlaceShipControlsView() {
+    for (let i = 0; i < controlDomElements.length; i += 1) {
+      controlDomElements[i].classList.add("display-disabled");
+    }
+    if (currentShipPlacement < controlDomElements.length) {
+      controlDomElements[currentShipPlacement].classList.remove(
+        "display-disabled"
+      );
+    } else {
+      disableView();
+    }
   }
 
   function placeShipListener() {
@@ -111,15 +154,16 @@ function ShipPlaceControls() {
       "click",
       (e) => {
         const { target } = e;
-        // HACK: This condition is not robust enough
-        if (target.classList.contains("valid-placement")) {
-          console.log(currentPlacementInfo);
+        if (target.classList.contains("valid-placement") && placeShipLatch) {
+          placeShipLatch = false;
           PubSub.publish(
             `place-${shipTypesArr[currentShipPlacement]}`,
             currentPlacementInfo
           );
           currentShipPlacement += 1;
           displayStatus("placed");
+          updatePlaceShipControlsView();
+          displayShipPlacementMessage();
         }
       },
       { signal }
@@ -135,10 +179,12 @@ function ShipPlaceControls() {
   // Subscribes to game-start event (inside of placeShipCanceler()),
   //  which then handles disabling the controls
   function init() {
+    enableView();
     displayPossibility();
     leaveSelectionWindowListener();
     changeOrientationListener();
     placeShipListener();
+    displayShipPlacementMessage();
   }
 
   // Passed to initGrid to set up shipPlacement eventlisteners

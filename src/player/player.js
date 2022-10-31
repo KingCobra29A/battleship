@@ -12,6 +12,18 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
   //    passCoord(2,9) returns { row:2 , column:9 }
   const passCoord = (row, column) => ({ row, column });
 
+  function randomCoord() {
+    const randomRow = Math.floor(Math.random() * 10);
+    const randomColumn = Math.floor(Math.random() * 10);
+    return passCoord(randomRow, randomColumn);
+  }
+
+  function randomOrientation() {
+    const randomIndex = Math.round(Math.random());
+    const orientation = randomIndex === 0 ? "horizontal" : "vertical";
+    return orientation;
+  }
+
   // battlePlan factory function is used by computer player
   //  is responsible for determining each move taken by AI
   const battlePlan = (() => {
@@ -31,13 +43,9 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
       return true;
     };
     const randomMove = () => {
-      let randomRow;
-      let randomColumn;
       let coord;
       do {
-        randomRow = Math.floor(Math.random() * 10);
-        randomColumn = Math.floor(Math.random() * 10);
-        coord = passCoord(randomRow, randomColumn);
+        coord = randomCoord();
       } while (!checkMove(coord));
       return coord;
     };
@@ -128,8 +136,28 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
   //    ships are placed synchronously via Gameboard.placeShip() method
   //    a promise is returned in order to avoid zalgo inside of Player.placeShips()
   const placeShipsAuto = () => {
-    placeShipsStaticly();
-    // TODO: actually implement an algorithm
+    // Monkey
+    // placeShipsStaticly();
+    let randomChoice;
+    for (let i = 0; i < Object.keys(shipTypes).length; i += 1) {
+      let shipIsNotPlaced = true;
+      const currentType = Object.keys(shipTypes)[i];
+      let orientation;
+      while (shipIsNotPlaced) {
+        try {
+          randomChoice = randomCoord();
+          orientation = randomOrientation();
+          garrison.checkVacancy(currentType, randomChoice, orientation);
+          garrison.placeShip(currentType, randomChoice, orientation);
+          console.log(
+            `Computer has placed their ${currentType} at row:${randomChoice.row} column:${randomChoice.column}`
+          );
+          shipIsNotPlaced = false;
+        } catch {
+          /* */
+        }
+      }
+    }
     return Promise.resolve(true);
   };
 

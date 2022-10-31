@@ -25,6 +25,9 @@ header {
 
 #board-wrapper {
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 #board-wrapper > div {
@@ -175,6 +178,7 @@ header {
 
 .enemy-waters .grid-square:not(.hit):not(.miss):hover {
   filter: brightness(0.75);
+  cursor: pointer;
 }
 
 .grid-square.valid-placement {

@@ -136,10 +136,11 @@ function ShipPlaceControls() {
   //    Changes which ship is being shown in controls
   //    Removes the controls entirely when all ships are placed
   function updatePlaceShipControlsView() {
-    for (let i = 0; i < controlDomElements.length; i += 1) {
-      controlDomElements[i].classList.add("display-disabled");
-    }
     if (currentShipPlacement < controlDomElements.length) {
+      for (let i = 0; i < controlDomElements.length; i += 1) {
+        controlDomElements[i].classList.add("display-disabled");
+      }
+
       controlDomElements[currentShipPlacement].classList.remove(
         "display-disabled"
       );

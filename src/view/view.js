@@ -86,7 +86,6 @@ const view = (() => {
         }
       }, optionalDuration);
     } else {
-      console.log(messageOne);
       removeMessage(messageOne);
       messageOne.appendChild(textnode);
     }

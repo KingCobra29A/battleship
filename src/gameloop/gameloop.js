@@ -2,6 +2,17 @@ import Player from "../player/player";
 import Board from "../gameboard/gameboard";
 import PubSub from "../utilities/pubSub";
 
+function displayTurn(player) {
+  const message = player === "human" ? "Your turn" : "Computers turn";
+  PubSub.publish("display-message", { message, duration: false });
+}
+
+function waitXmiliSec(x) {
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(), x);
+  });
+}
+
 const GameLoop = async () => {
   const humanBoard = Board();
   const enemyBoard = Board();
@@ -20,6 +31,7 @@ const GameLoop = async () => {
   //  Game is now initialized to begin. Gameloop should notify UI
   //    At this point, board receives attacks, not ships
   PubSub.publish("game-start", "");
+  await waitXmiliSec(1000);
 
   // TURN BLOCK
   // Check if game is won/lost
@@ -27,11 +39,13 @@ const GameLoop = async () => {
   //    else
   //      Next player goes
   while (true) {
+    displayTurn("human");
     await human.takeMove();
     if (enemyBoard.checkForVictory) {
       // Human player won
       break;
     }
+    displayTurn("computer");
     await enemy.takeMove();
     if (humanBoard.checkForVictory) {
       // Computer player won

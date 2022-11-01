@@ -17,6 +17,21 @@ const coordTools = (() => {
     return coords;
   }
 
+  function allCoords(length, coord, ori) {
+    const coords = [];
+    let { row } = coord;
+    let { column } = coord;
+    for (let i = 0; i < length; i += 1) {
+      coords.push({ row, column });
+      if (ori === "horizontal") {
+        column += 1;
+      } else {
+        row += 1;
+      }
+    }
+    return coords;
+  }
+
   // Used in getAllSelectors
   //  is passed an array: [row, column]
   //  returns a css selector
@@ -41,6 +56,7 @@ const coordTools = (() => {
     getCoordinateList,
     makeSelectorFromArray,
     getAllSelectors,
+    allCoords,
   };
 })();
 

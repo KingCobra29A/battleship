@@ -140,7 +140,6 @@ function ShipPlaceControls() {
       for (let i = 0; i < controlDomElements.length; i += 1) {
         controlDomElements[i].classList.add("display-disabled");
       }
-
       controlDomElements[currentShipPlacement].classList.remove(
         "display-disabled"
       );

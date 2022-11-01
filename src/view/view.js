@@ -64,7 +64,6 @@ const view = (() => {
 
   function displayMessage(message, optionalDuration) {
     const textnode = document.createTextNode(message);
-    console.log(message);
     if (message === "") {
       removeMessage(messageOne);
       removeMessage(messageTwo);

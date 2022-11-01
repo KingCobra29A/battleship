@@ -78,19 +78,60 @@ test("checkCoordinates method: unhappy, coordinates are outside of bounds", () =
   }
 });
 
-test.skip("traverseBoard method: ", () => {
-  const testArray = myArray(10, () => true);
+test("traverseBoard method: ", () => {
+  const objProto = { boolz: true };
+  const testArray = myArray(10, () => Object.create(objProto));
   const origin = { row: 0, column: 0 };
-  expect.assertions(1);
+  expect.assertions(4);
 
-  testArray[0][0] = false;
-  testArray[0][2] = false;
+  testArray[0][0].boolz = false;
+  testArray[0][2].boolz = false;
 
-  testArray.traverseBoard(4, origin, "horizontal", (boolvar) => {
-    if (boolvar === true) boolvar = "fish";
+  testArray.traverseBoard(4, origin, "horizontal", (obj) => {
+    if (obj.boolz === true) obj.boolz = "fish";
   });
-  expect(testArray[0][0]).toBe(false);
-  expect(testArray[0][2]).toBe(false);
-  expect(testArray[0][1]).toBe("fish");
-  expect(testArray[0][3]).toBe("fish");
+  expect(testArray[0][0].boolz).toBe(false);
+  expect(testArray[0][2].boolz).toBe(false);
+  expect(testArray[0][1].boolz).toBe("fish");
+  expect(testArray[0][3].boolz).toBe("fish");
+});
+
+test("checkAdjacent method: happy path, check multiple coords on empty board ", () => {
+  const testArray = myArray(10, () => false);
+  const testFn = (boolvar) => boolvar;
+  const origin = { row: 0, column: 0 };
+  const coord0 = { row: 5, column: 5 };
+  const coord1 = { row: 9, column: 9 };
+  const coord2 = { row: 9, column: 5 };
+  const coord3 = { row: 5, column: 9 };
+
+  expect.assertions(5);
+  expect(testArray.checkAdjacent(origin, testFn)).toBe(false);
+  expect(testArray.checkAdjacent(coord0, testFn)).toBe(false);
+  expect(testArray.checkAdjacent(coord1, testFn)).toBe(false);
+  expect(testArray.checkAdjacent(coord2, testFn)).toBe(false);
+  expect(testArray.checkAdjacent(coord3, testFn)).toBe(false);
+});
+
+test("checkAdjacent method: check multiple coords with neighbors", () => {
+  const testArray = myArray(10, () => false);
+  const testFn = (boolvar) => boolvar;
+  const origin = { row: 0, column: 0 };
+  const coord0 = { row: 5, column: 5 };
+  const coord1 = { row: 9, column: 9 };
+  const coord2 = { row: 9, column: 5 };
+  const coord3 = { row: 5, column: 9 };
+
+  testArray[0][1] = true;
+  testArray[5][6] = true;
+  testArray[8][9] = true;
+  testArray[9][6] = true;
+  testArray[6][9] = true;
+
+  expect.assertions(5);
+  expect(testArray.checkAdjacent(origin, testFn)).toBe(true);
+  expect(testArray.checkAdjacent(coord0, testFn)).toBe(true);
+  expect(testArray.checkAdjacent(coord1, testFn)).toBe(true);
+  expect(testArray.checkAdjacent(coord2, testFn)).toBe(true);
+  expect(testArray.checkAdjacent(coord3, testFn)).toBe(true);
 });

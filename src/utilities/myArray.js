@@ -61,6 +61,20 @@ const myArray = (sizeIn, populator) => {
     }
   };
 
+  array2D.checkAdjacent = (coordinate, cbk) => {
+    const { row } = coordinate;
+    const { column } = coordinate;
+    let val = false;
+    function action(r, c) {
+      val = val || cbk(array2D[r][c]);
+    }
+    if (row - 1 > -1) action(row - 1, column);
+    if (row + 1 < size - 1) action(row + 1, column);
+    if (column - 1 > -1) action(row, column - 1);
+    if (column + 1 < size - 1) action(row, column + 1);
+    return val;
+  };
+
   return array2D;
 };
 

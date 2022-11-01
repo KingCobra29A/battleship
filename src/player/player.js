@@ -1,5 +1,7 @@
 import PubSub from "../utilities/pubSub";
 import shipTypes from "../ship/shiptypes";
+import coordTools from "../view/coordSelectorTools";
+import myArray from "../utilities/myArray";
 
 const Player = (typeIn, playerBoard, enemyBoard) => {
   const type = typeIn;
@@ -115,46 +117,61 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
 
     if (battlePlan.checkMove(attackCoord)) {
       const report = battlefield.receiveAttack(attackCoord);
-      battlePlan.remember = attackCoord; // HACK, should be done directly in battlePlan
+      battlePlan.remember = attackCoord;
       publishMove(report);
       return Promise.resolve(true);
     }
     throw new Error("Repeat move");
   };
 
-  // Temporary function, places ships in a cluster at top left of grid
-  //  will be removed from code base once algorithms are in place
-  const placeShipsStaticly = () => {
-    for (let i = 0; i < Object.keys(shipTypes).length; i += 1) {
-      const shiptype = Object.keys(shipTypes)[i];
-      garrison.placeShip(shiptype, passCoord(0, i), "vertical");
+  // Used by computer player in placeShipsAuto
+  //  Input parameters are the ship placement info
+  //  returns false if the surronding area is empty
+  //    throws an error otherwise
+  function checkSeclusion(currentType, randomChoice, orientation) {
+    const length = shipTypes[currentType];
+    // create array of coordinate objects
+    const allCoords = coordTools.allCoords(length, randomChoice, orientation);
+    // checkAdjacent returns false if everything is vacant
+    // each call to an elements callback should return false if vacant
+    const outerVacancyFn = garrison.board.checkAdjacent;
+    // square.vacancy returns true if vacant
+    const innerVacancyFn = (square) => !square.vacancy;
+    for (let i = 0; i < allCoords.length; i += 1) {
+      if (outerVacancyFn(allCoords[i], innerVacancyFn))
+        throw new Error("Too crowded");
     }
-  };
+    return false;
+  }
 
   // Used by computer player to place ships
   //    algorithm is used to decide locations
   //    ships are placed synchronously via Gameboard.placeShip() method
   //    a promise is returned in order to avoid zalgo inside of Player.placeShips()
   const placeShipsAuto = () => {
-    // Monkey
-    // placeShipsStaticly();
-    let randomChoice;
     for (let i = 0; i < Object.keys(shipTypes).length; i += 1) {
+      // initialize while loop condition
       let shipIsNotPlaced = true;
+      // initialize/declare parameters for ship placement
       const currentType = Object.keys(shipTypes)[i];
+      let randomChoice;
       let orientation;
       while (shipIsNotPlaced) {
         try {
+          // select random coordinate
           randomChoice = randomCoord();
+          // select random orientation
           orientation = randomOrientation();
+          // check if the random placement is unoccupied
           garrison.checkVacancy(currentType, randomChoice, orientation);
+          // check if all adjacent squares are secluded
+          checkSeclusion(currentType, randomChoice, orientation);
+          // Place the ship
           garrison.placeShip(currentType, randomChoice, orientation);
-          console.log(
-            `Computer has placed their ${currentType} at row:${randomChoice.row} column:${randomChoice.column}`
-          );
           shipIsNotPlaced = false;
         } catch {
-          /* */
+          // Either the placement was occupied, or the neighborhood was busy
+          //   either way, try again, since shipIsNotPlaced === true
         }
       }
     }

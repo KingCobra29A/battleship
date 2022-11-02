@@ -11,7 +11,6 @@ afterEach(() => {
 });
 
 test("hit method: test return value", () => {
-  console.log(shipInstance.hit);
   expect(shipInstance.hit()).toBe(true);
 });
 

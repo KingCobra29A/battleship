@@ -2,7 +2,6 @@ import PubSub from "../utilities/pubSub";
 import getCoordFromElement from "./getCoordFromElement";
 import coordTools from "./coordSelectorTools";
 import shipTypes from "../ship/shiptypes";
-import { doc } from "prettier";
 
 /*  Factory function
  ** Returns a controller to handle the ship placement controls
@@ -11,6 +10,7 @@ import { doc } from "prettier";
  */
 function ShipPlaceControls() {
   const hoverController = new AbortController();
+  const placeController = new AbortController();
   const waters = document.querySelector(".allied-waters");
   let currentSquare;
   let currentPlacementInfo;
@@ -32,6 +32,16 @@ function ShipPlaceControls() {
       const message = `Place your ${shipTypesArr[currentShipPlacement]}`;
       PubSub.publish("display-message", { message, duration: false });
     }
+  }
+
+  function displayPlacementPossibilityMessage(possible) {
+    let message;
+    if (possible === true) {
+      message = `${shipTypesArr[currentShipPlacement]} can be placed here`;
+    } else {
+      message = `${shipTypesArr[currentShipPlacement]} does not fit here`;
+    }
+    PubSub.publish("display-message", { message, duration: 1000 });
   }
 
   function changeOrientationListener() {
@@ -56,17 +66,6 @@ function ShipPlaceControls() {
     for (let i = 0; i < elements.length; i += 1) {
       elements[i].classList.remove("invalid-placement", "valid-placement");
     }
-  }
-
-  // Helper function used in init
-  // Sets up an eventlistner to remove placementIndications
-  //    when leaving the allied-waters dom element
-  function leaveSelectionWindowListener() {
-    const fn = removeShipPlacementIndications;
-    const { signal } = hoverController;
-    waters.addEventListener("mouseout", (e) => fn(e.target), {
-      signal,
-    });
   }
 
   // Check to see if placement is possible
@@ -105,6 +104,21 @@ function ShipPlaceControls() {
     }
   }
 
+  function showPossibility(possible) {
+    const btn = document.querySelector(
+      ".place-ship-control:not(.display-disabled)"
+    );
+    if (possible) {
+      // Placement works
+      btn.classList.add("place-button-enabled");
+      displayPlacementPossibilityMessage(true);
+    } else {
+      // Placement doesnt work
+      btn.classList.remove("place-button-enabled");
+      displayPlacementPossibilityMessage(false);
+    }
+  }
+
   // Called once, in init method
   // sets up subscription for "place-ship-hover-result"
   function displayPossibility() {
@@ -112,9 +126,11 @@ function ShipPlaceControls() {
       if (result) {
         displayStatus("query");
         placeShipLatch = true;
+        showPossibility(true);
       } else {
         placeShipLatch = false;
         currentSquare.classList.add("invalid-placement");
+        showPossibility(false);
       }
     });
   }
@@ -136,43 +152,44 @@ function ShipPlaceControls() {
   //    Changes which ship is being shown in controls
   //    Removes the controls entirely when all ships are placed
   function updatePlaceShipControlsView() {
+    const { signal } = placeController;
     if (currentShipPlacement < controlDomElements.length) {
+      // Disable display of all place-ship-buttons
       for (let i = 0; i < controlDomElements.length; i += 1) {
         controlDomElements[i].classList.add("display-disabled");
+        controlDomElements[i].classList.remove("place-button-enabled");
       }
+      // Enable display of only the current place-ship-button
       controlDomElements[currentShipPlacement].classList.remove(
         "display-disabled"
+      );
+      // Add event listener for ship placement
+      controlDomElements[currentShipPlacement].addEventListener(
+        "click",
+        () => {
+          if (placeShipLatch) {
+            placeShipLatch = false;
+            PubSub.publish(
+              `place-${shipTypesArr[currentShipPlacement]}`,
+              currentPlacementInfo
+            );
+            currentShipPlacement += 1;
+            displayStatus("placed");
+            updatePlaceShipControlsView();
+            displayShipPlacementMessage();
+          }
+        },
+        { signal }
       );
     } else {
       disableView();
     }
   }
 
-  function placeShipListener() {
-    const { signal } = hoverController;
-    waters.addEventListener(
-      "click",
-      (e) => {
-        const { target } = e;
-        if (target.classList.contains("valid-placement") && placeShipLatch) {
-          placeShipLatch = false;
-          PubSub.publish(
-            `place-${shipTypesArr[currentShipPlacement]}`,
-            currentPlacementInfo
-          );
-          currentShipPlacement += 1;
-          displayStatus("placed");
-          updatePlaceShipControlsView();
-          displayShipPlacementMessage();
-        }
-      },
-      { signal }
-    );
-  }
-
   // Disables the event listeners assocaited with the ship placement controls
   function disable() {
     hoverController.abort();
+    placeController.abort();
   }
 
   // Initializes the controls
@@ -181,9 +198,7 @@ function ShipPlaceControls() {
   function init() {
     enableView();
     displayPossibility();
-    leaveSelectionWindowListener();
     changeOrientationListener();
-    placeShipListener();
     displayShipPlacementMessage();
   }
 

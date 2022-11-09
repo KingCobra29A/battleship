@@ -118,6 +118,9 @@ header {
   align-items: center;
   justify-content: center;
   margin: 0 10px 0 0;
+  font-family: "Space Mono";
+  text-align: center;
+  font-size: 0.9rem;
 }
 
 .place-ship-control {
@@ -125,6 +128,12 @@ header {
 
   background-color: bisque;
   margin: 0 0 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Space Mono";
+  text-align: center;
+  font-size: 0.9rem;
 }
 
 #place-carrier {
@@ -183,7 +192,7 @@ header {
 }
 
 .grid-square.valid-placement {
-  background-color: greenyellow;
+  background-color: green;
 }
 
 .grid-square.invalid-placement {
@@ -202,4 +211,8 @@ header {
 #reset-btn.display-disabled,
 .display-disabled {
   display: none;
+}
+
+.place-button-enabled {
+  background-color: green;
 }

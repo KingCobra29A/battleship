@@ -44,7 +44,7 @@ const view = (() => {
         square.setAttribute("data-row", i);
         square.setAttribute("data-column", j);
         if (CBK) {
-          square.addEventListener("mouseenter", (e) => CBK.cbk(e), {
+          square.addEventListener("click", (e) => CBK.cbk(e), {
             signal: CBK.signal,
           });
         }

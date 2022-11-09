@@ -135,3 +135,120 @@ test("checkAdjacent method: check multiple coords with neighbors", () => {
   expect(testArray.checkAdjacent(coord2, testFn)).toBe(true);
   expect(testArray.checkAdjacent(coord3, testFn)).toBe(true);
 });
+
+test("checkAdjacent method: check vertical neighbors", () => {
+  const objProtoz = { hit: false, sunk: false };
+  const testArray = myArray(10, () => Object.create(objProtoz));
+  const testFn = (element) => element.hit && !element.sunk;
+  const dir = "vertical";
+  const origin = { row: 0, column: 0 };
+  const coord0 = { row: 5, column: 5 };
+
+  testArray[1][0].hit = true;
+  testArray[1][0].sunk = true;
+  testArray[6][5].hit = true;
+  testArray[6][5].sunk = false;
+
+  expect.assertions(2);
+  expect(testArray.checkAdjacent(origin, testFn, dir)).toBe(false);
+  expect(testArray.checkAdjacent(coord0, testFn, dir)).toBe(true);
+});
+
+test("checkAdjacent method: check horizontal neighbors", () => {
+  const objProtoz = { hit: false, sunk: false };
+  const testArray = myArray(10, () => Object.create(objProtoz));
+  const testFn = (element) => element.hit && !element.sunk;
+  const dir = "horizontal";
+  const coord0 = { row: 1, column: 1 };
+  const coord1 = { row: 5, column: 5 };
+
+  // setting up coord0 test
+  testArray[0][1].hit = true;
+  testArray[0][1].sunk = false;
+  testArray[2][1].hit = true;
+  testArray[2][1].sunk = false;
+  testArray[1][0].hit = true;
+  testArray[1][0].sunk = true;
+  testArray[1][2].hit = true;
+  testArray[1][2].sunk = true;
+
+  // setting up coord1 test
+  testArray[5][4].hit = true;
+  testArray[5][4].sunk = true;
+  testArray[5][6].hit = true;
+  testArray[5][6].sunk = false;
+
+  expect.assertions(2);
+  expect(testArray.checkAdjacent(coord0, testFn, dir)).toBe(false);
+  expect(testArray.checkAdjacent(coord1, testFn, dir)).toBe(true);
+});
+
+test("checkAdjacent method: check condition on left edge of array", () => {
+  const objProtoz = { hit: false, sunk: false };
+  const testArray = myArray(10, () => Object.create(objProtoz));
+  const testFn = (element) => element.hit !== true;
+  const coord0 = { row: 2, column: 0 };
+
+  // setting up coord0 test
+  testArray[1][0].hit = true;
+  testArray[3][0].hit = true;
+  testArray[2][1].hit = true;
+
+  expect.assertions(1);
+  expect(testArray.checkAdjacent(coord0, testFn)).toBe(false);
+});
+
+test("linearSearch method: return first match", () => {
+  const testArray = myArray(10, () => false);
+  testArray[5][5] = true;
+  const conditionFn = (boolElement) => boolElement === true;
+
+  expect.assertions(1);
+  expect(testArray.linearSearch(conditionFn, 0)).toEqual({ row: 5, column: 5 });
+});
+
+test("linearSearch method: return second & fifth match", () => {
+  const testArray = myArray(10, () => false);
+  testArray[0][0] = true;
+  testArray[0][9] = true;
+  testArray[1][0] = true;
+  testArray[2][0] = true;
+  testArray[9][9] = true;
+  const conditionFn = (boolElement) => boolElement === true;
+
+  expect.assertions(2);
+  expect(testArray.linearSearch(conditionFn, 1)).toEqual({ row: 0, column: 9 });
+  expect(testArray.linearSearch(conditionFn, 4)).toEqual({ row: 9, column: 9 });
+});
+
+test("lastInRow method: ", () => {
+  const objProtoz = { hit: false, sunk: false };
+  const testArray = myArray(10, () => Object.create(objProtoz));
+  const coord0 = { row: 5, column: 5 };
+
+  const testFn = (report) => report.hit === true;
+
+  testArray[5][5] = { hit: true };
+  testArray[5][6] = { hit: true };
+  testArray[5][7] = { hit: true };
+  testArray[5][8] = { hit: true };
+
+  expect.assertions(1);
+  expect(testArray.lastInRow(coord0, testFn)).toEqual({ row: 5, column: 8 });
+});
+
+test("lastInColumn method: ", () => {
+  const objProtoz = { hit: false, sunk: false };
+  const testArray = myArray(10, () => Object.create(objProtoz));
+  const coord0 = { row: 6, column: 5 };
+
+  const testFn = (report) => report.hit === true;
+
+  testArray[6][5] = { hit: true };
+  testArray[7][5] = { hit: true };
+  testArray[8][5] = { hit: true };
+  testArray[9][5] = { hit: true };
+
+  expect.assertions(1);
+  expect(testArray.lastInColumn(coord0, testFn)).toEqual({ row: 9, column: 5 });
+});

@@ -11,7 +11,13 @@ const Gameboard = () => {
     let shipLocations; // { length, coordinate, orientation }
 
     const blowUp = () => {
-      const report = { hit: false, sunk: false, type: false, graveyard: false };
+      const report = {
+        intact: false,
+        hit: false,
+        sunk: false,
+        type: false,
+        graveyard: false,
+      };
       intact = false;
       if (!isVacant) {
         report.hit = shipPointer.hit();
@@ -108,7 +114,6 @@ const Gameboard = () => {
       if (battleReport.sunk === true) explodedForces += 1;
       return battleReport;
     } catch (e) {
-      console.log(e.message);
       return e.message;
     }
   };

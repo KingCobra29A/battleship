@@ -2,6 +2,12 @@ import PubSub from "../utilities/pubSub";
 import shipTypes from "../ship/shiptypes";
 import coordTools from "../view/coordSelectorTools";
 import myArray from "../utilities/myArray";
+import random from "./random";
+import shipSearch from "./manageShipSearch";
+
+// utility function for passing coordinates to gameboard
+//    passCoord(2,9) returns { row:2 , column:9 }
+const passCoord = (row, column) => ({ row, column });
 
 const Player = (typeIn, playerBoard, enemyBoard) => {
   const type = typeIn;
@@ -9,52 +15,226 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
   const battlefield = enemyBoard;
   const attackEvent =
     type === "human" ? "player-attack-result" : "enemy-attack-result";
+  const remainingShips = shipSearch();
 
-  // utility function for passing coordinates to gameboard
-  //    passCoord(2,9) returns { row:2 , column:9 }
-  const passCoord = (row, column) => ({ row, column });
-
-  function randomCoord() {
-    const randomRow = Math.floor(Math.random() * 10);
-    const randomColumn = Math.floor(Math.random() * 10);
-    return passCoord(randomRow, randomColumn);
+  function getNeighbors(coord, dir) {
+    const returnSet = [];
+    const checkLow = (num) => num - 1 > -1;
+    const checkHigh = (num) => num + 1 < 10;
+    const { row } = coord;
+    const { column } = coord;
+    if (dir === "horizontal") {
+      if (checkLow(column)) returnSet.push({ row, column: coord.column - 1 });
+      if (checkHigh(column)) returnSet.push({ row, column: coord.column + 1 });
+    } else if (dir === "vertical") {
+      if (checkLow(row)) returnSet.push({ row: coord.row - 1, column });
+      if (checkHigh(row)) returnSet.push({ row: coord.row + 1, column });
+    } else {
+      if (checkLow(column)) returnSet.push({ row, column: coord.column - 1 });
+      if (checkHigh(column)) returnSet.push({ row, column: coord.column + 1 });
+      if (checkLow(row)) returnSet.push({ row: coord.row - 1, column });
+      if (checkHigh(row)) returnSet.push({ row: coord.row + 1, column });
+    }
+    return returnSet;
   }
 
-  function randomOrientation() {
-    const randomIndex = Math.round(Math.random());
-    const orientation = randomIndex === 0 ? "horizontal" : "vertical";
-    return orientation;
+  // Used in checkMove
+  // returns false if the coord is valid
+  // returns true if the coord is invalid
+  function validateCoordRange(coord) {
+    if (coord > -1 && coord < 10) return false;
+    return true;
   }
 
   // battlePlan factory function is used by computer player
   //  is responsible for determining each move taken by AI
   const battlePlan = (() => {
-    const pastMoves = [];
+    const objProto = { hit: false, sunk: false, intact: true, heur: 0 };
+    const pastMoves = myArray(10, () => structuredClone(objProto));
+    let highestHeuristic = 0;
+
+    // turnLatch, turnPromise, turnPromiseResolver all used by human player
     let turnLatch = 1;
     let turnPromise;
     let turnPromiseResolver = () => {};
 
+    // Returns true if the coord has not yet been attacked
+    //  returns false otherwise
     const checkMove = (coord) => {
-      if (
-        pastMoves.some(
-          (element) =>
-            element.row === coord.row && element.column === coord.column
-        )
-      )
+      if (validateCoordRange(coord.row) || validateCoordRange(coord.column)) {
         return false;
-      return true;
+      }
+      if (pastMoves[coord.row][coord.column].intact === true) {
+        return true;
+      }
+      return false;
     };
-    const randomMove = () => {
+
+    // Returns a random coord that has not yet been attacked
+    // If optionalSet paramter is passed, return a random coord from that set
+    // Otherwise return a random, unattacked coord
+    const randomMove = (optionalSet) => {
       let coord;
+      const coordGenerator =
+        typeof optionalSet === "undefined"
+          ? random.coord
+          : random.fromSet(optionalSet);
       do {
-        coord = randomCoord();
+        coord = coordGenerator();
       } while (!checkMove(coord));
       return coord;
     };
 
+    // eval function used to see if a square has an unsunk ship
+    function evalUnsunk(report) {
+      return report.hit && !report.sunk;
+    }
+    // eval function to see if a square has not been hit
+    function evalUnhit(report) {
+      return report.intact === true;
+    }
+
+    // Checks to see if a ship could exist at passed placement info
+    function checkFit(length, coord, ori) {
+      let fits = true;
+      try {
+        pastMoves.checkCoordinates(length, coord, ori);
+        pastMoves.traverseBoard(length, coord, ori, (report) => {
+          fits = fits && report.intact;
+        });
+      } catch {
+        // Error was thrown due to imposible placement
+        return false;
+      }
+      return fits;
+    }
+
+    function heurPlusOne(length, coord, ori) {
+      pastMoves.traverseBoard(length, coord, ori, (report) => {
+        report.heur += 1;
+        if (report.heur > highestHeuristic) highestHeuristic = report.heur;
+      });
+    }
+
+    function updateReportHeur(length, coord) {
+      const fitsHorizontally = checkFit(length, coord, "horizontal");
+      const fitsVertically = checkFit(length, coord, "vertical");
+      if (fitsHorizontally === true) heurPlusOne(length, coord, "horizontal");
+      if (fitsVertically === true) heurPlusOne(length, coord, "vertical");
+    }
+
+    function updateHeuristicValue() {
+      // Reset the heuristic values
+      highestHeuristic = 0;
+      pastMoves.applyToEach((report) => {
+        report.heur = 0;
+      });
+      // get the ship lengths that remain
+      const lengths = remainingShips.getlengths();
+      // iterate across each report in the pastmoves array
+      for (let i = 0; i < 10; i += 1) {
+        for (let j = 0; j < 10; j += 1) {
+          let thisCoord = passCoord(i, j);
+          // iterate across each remaining ship length
+          for (let k = 0; k < lengths.length; k += 1) {
+            updateReportHeur(lengths[k], thisCoord);
+          }
+        }
+      }
+    }
+
+    function getHighestHeuristicSet() {
+      const coords = [];
+      for (let i = 0; i < 10; i += 1) {
+        for (let j = 0; j < 10; j += 1) {
+          if (pastMoves[i][j].heur === highestHeuristic) {
+            coords.push(passCoord(i, j));
+          }
+        }
+      }
+      return coords;
+    }
+
+    // returns the first "unsunk" coordinate with attackable adjacent squares
+    function findUnsunkShip() {
+      // incremened incase more than on linearSearch is necessary
+      let nthMatch = 0;
+      // look for an unsunk ship
+      let unsunk = pastMoves.linearSearch(evalUnsunk, nthMatch);
+      // if there is none, return false
+      if (unsunk === false) return false;
+      while (!pastMoves.checkAdjacent(unsunk, evalUnhit)) {
+        nthMatch += 1;
+        unsunk = pastMoves.linearSearch(evalUnsunk, nthMatch);
+      }
+      return unsunk;
+    }
+
+    // Function used by computer player to decide where to attack
     const decideMove = () =>
+      // Create and return an unresolved promise
       new Promise((resolve) => {
-        setTimeout(() => resolve(randomMove()), 100);
+        let attackCoord;
+        let coordinateSet;
+        let unsunk;
+        let unsunkAttempt2;
+        const timeoutDelay = 100;
+        /*
+         *  Decide where to attack block
+         */
+        // Check to see if there are any partially damaged ships
+        //    if so, continue to target them
+        unsunk = findUnsunkShip();
+        if (unsunk === false) {
+          // No partially damaged ships;
+          // calculate hurisitc value for each square
+          updateHeuristicValue();
+          // find set of squares with the highest heuristic value
+          const mostProbableLocations = getHighestHeuristicSet();
+          //  attack randomly based on heuristic function
+          attackCoord = randomMove(mostProbableLocations);
+        } else if (pastMoves.checkAdjacent(unsunk, evalUnsunk, "horizontal")) {
+          try {
+            // attack horizontally
+            coordinateSet = getNeighbors(unsunk, "horizontal");
+            attackCoord = randomMove(coordinateSet);
+          } catch {
+            try {
+              // find the last element in this row
+              unsunkAttempt2 = pastMoves.lastInRow(unsunk, evalUnsunk);
+              // get its horizontal neighbors
+              coordinateSet = getNeighbors(unsunkAttempt2, "horizontal");
+              // attack horizontally
+              attackCoord = randomMove(coordinateSet);
+            } catch {
+              // attack vertically
+              coordinateSet = getNeighbors(unsunk, "vertical");
+              attackCoord = randomMove(coordinateSet);
+            }
+          }
+        } else {
+          try {
+            // attack vertically
+            coordinateSet = getNeighbors(unsunk, "vertical");
+            attackCoord = randomMove(coordinateSet);
+          } catch {
+            try {
+              // find the last element in this column
+              unsunkAttempt2 = pastMoves.lastInColumn(unsunk, evalUnsunk);
+              // get its vertical neighbors
+              coordinateSet = getNeighbors(unsunkAttempt2, "vertical");
+              // attack vertically
+              attackCoord = randomMove(coordinateSet);
+            } catch {
+              // attack horizontally
+              coordinateSet = getNeighbors(unsunk, "horizontal");
+              attackCoord = randomMove(coordinateSet);
+            }
+          }
+        }
+
+        // Resolve the promise with the desired coordinate
+        setTimeout(() => resolve(attackCoord), timeoutDelay);
       });
 
     //  Invoked on "player-attack" event
@@ -81,10 +261,34 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
       return turnPromise;
     }
 
+    // Used in takeMove to remember the result of each move
+    // Updates elements of the pastMoves array to hold the attack report
+    function remember(report) {
+      const { row } = report.coord;
+      const { column } = report.coord;
+      pastMoves[row][column] = report;
+      // if the ship is sunk, update all relevant reports to reflect this
+      if (report.sunk === true) {
+        // delete the ship from the search
+        remainingShips.remove(report.type);
+        // get all relevant coordinates
+        const coordsToUpdate = coordTools.getCoordinateList(
+          report.graveyard.length,
+          report.graveyard.coordinate,
+          report.graveyard.orientation
+        );
+        // update sunk, graveyard properties for each coordinate
+        for (let i = 0; i < coordsToUpdate.length; i += 1) {
+          const r = coordsToUpdate[i][0];
+          const c = coordsToUpdate[i][1];
+          pastMoves[r][c].sunk = true;
+          pastMoves[r][c].graveyard = report.graveyard;
+        }
+      }
+    }
+
     return {
-      set remember(coord) {
-        pastMoves.push(coord);
-      },
+      remember,
       resetTurnPromise,
       resolveTurnPromise,
       checkMove,
@@ -117,7 +321,7 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
 
     if (battlePlan.checkMove(attackCoord)) {
       const report = battlefield.receiveAttack(attackCoord);
-      battlePlan.remember = attackCoord;
+      battlePlan.remember(report);
       publishMove(report);
       return Promise.resolve(true);
     }
@@ -159,9 +363,9 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
       while (shipIsNotPlaced) {
         try {
           // select random coordinate
-          randomChoice = randomCoord();
+          randomChoice = random.coord();
           // select random orientation
-          orientation = randomOrientation();
+          orientation = random.orientation();
           // check if the random placement is unoccupied
           garrison.checkVacancy(currentType, randomChoice, orientation);
           // check if all adjacent squares are secluded

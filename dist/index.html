@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Battleship</title>
+<script defer src="runtime.js"></script><script defer src="main.js"></script></head>
+
+<body>
+  <header>BATTLESHIP</header>
+  <div class="game-wrapper">
+    <div id="controls-wrapper">
+      <div id="message-center">
+        <div id="message-one"></div>
+        <div id="message-two"></div>
+      </div>
+      <div id="placement-controls">
+        <div id="place-carrier" class="place-ship-control btn-disabled">Place</div>
+        <div id="place-battleship" class="place-ship-control btn-disabled display-disabled">Place</div>
+        <div id="place-destroyer" class="place-ship-control btn-disabled display-disabled">Place</div>
+        <div id="place-submarine" class="place-ship-control btn-disabled display-disabled">Place</div>
+        <div id="place-patrolboat" class="place-ship-control btn-disabled display-disabled">Place</div>
+        <div id="orientation-btn">horizontal</div>
+      </div>
+      <div id="reset-btn" class="display-disabled">Play again</div>
+    </div>
+    <div id="board-wrapper">
+      <div class="enemy-waters board-shift"></div>
+      <div class="allied-waters board-shift"></div>      
+    </div>
+  </div>
+</body>
+
+</html>

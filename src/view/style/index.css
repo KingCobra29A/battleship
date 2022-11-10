@@ -246,7 +246,7 @@ header {
 
 @media only screen and (max-width: 500px) {
   :root {
-    --board-size: 80vw;
+    --board-size: 95vw;
     --header-text-size: 3rem;
     --header-height: 3rem;
     --controls-wrapper-margin: 0.25rem auto 0.5rem auto;

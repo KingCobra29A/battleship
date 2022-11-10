@@ -134,7 +134,7 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
       // iterate across each report in the pastmoves array
       for (let i = 0; i < 10; i += 1) {
         for (let j = 0; j < 10; j += 1) {
-          let thisCoord = passCoord(i, j);
+          const thisCoord = passCoord(i, j);
           // iterate across each remaining ship length
           for (let k = 0; k < lengths.length; k += 1) {
             updateReportHeur(lengths[k], thisCoord);
@@ -178,7 +178,7 @@ const Player = (typeIn, playerBoard, enemyBoard) => {
         let coordinateSet;
         let unsunk;
         let unsunkAttempt2;
-        const timeoutDelay = 100;
+        const timeoutDelay = 2250;
         /*
          *  Decide where to attack block
          */

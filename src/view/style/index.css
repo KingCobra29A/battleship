@@ -50,14 +50,16 @@ header {
   display: flex;
   flex-direction: column;
   gap: 1px;
+  position: relative;
+  flex-shrink: 0;
 }
 
 .board-shift-transition {
-  transition: transform 1s ease-in-out;
+  transition: transform 1.5s ease-in-out;
 }
 
 .board-shift {
-  transform: translate(0, calc(-1 * var(--board-size)));
+  transform: translate(0, calc(-1 * (var(--board-size) + 9px)));
 }
 
 .allied-waters .grid-square {
@@ -251,5 +253,13 @@ header {
     --controls-wrapper-height-factor: calc(var(--board-size) * 4 / 10);
     --message-center-top-margin: 0.25rem;
     --reset-btn-height: 1.75rem;
+  }
+
+  .board-shift-mobile {
+    transform: translate(0, calc(-1 * (var(--board-size) + 9px)));
+  }
+
+  .board-wrapper-mobile-sizing {
+    height: calc(var(--board-size) + 9px);
   }
 }

@@ -193,6 +193,8 @@ const view = (() => {
     GameLoop();
     // disable view of enemy board
     shift(true);
+    // subscribe to additional board transforms for mobile devices
+    addMobileOnlyBoardTransitions();
     // disable view of the reset button
     resetBtn.classList.add("display-disabled");
     // clear victory/gamelost message
@@ -226,6 +228,18 @@ const view = (() => {
   }
 
   gameReset();
+
+  function addMobileOnlyBoardTransitions() {
+    PubSub.subscribe("setup-turn-view", (data) => {
+      if (data.player === "human") {
+        waters[0].classList.remove("board-shift-mobile");
+        waters[1].classList.remove("board-shift-mobile");
+      } else {
+        waters[0].classList.add("board-shift-mobile");
+        waters[1].classList.add("board-shift-mobile");
+      }
+    });
+  }
 
   //  Transition effect is add 1 second after initializing view (done in init)
   //  This is done so that the initial shift is not visible

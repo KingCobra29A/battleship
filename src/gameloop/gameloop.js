@@ -5,6 +5,7 @@ import PubSub from "../utilities/pubSub";
 function displayTurn(player) {
   const message = player === "human" ? "Your turn" : "Computers turn";
   PubSub.publish("display-message", { message, duration: false });
+  PubSub.publish("setup-turn-view", { player });
 }
 
 function waitXmiliSec(x) {
@@ -45,12 +46,14 @@ const GameLoop = async () => {
       // Human player won
       break;
     }
+    await waitXmiliSec(750);
     displayTurn("computer");
     await enemy.takeMove();
     if (humanBoard.checkForVictory) {
       // Computer player won
       break;
     }
+    await waitXmiliSec(750);
   }
 
   // ENDGAME BLOCK

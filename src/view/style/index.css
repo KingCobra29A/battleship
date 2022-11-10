@@ -1,23 +1,36 @@
 @import url("https://fonts.googleapis.com/css2?family=Patua+One&family=Space+Mono&display=swap");
 
 :root {
+  --max-board-size: 500px;
   --board-size: 500px;
   --header-text-size: 5rem;
+  --header-height: 5rem;
+  --controls-wrapper-margin: 1rem auto 1rem auto;
+  --controls-wrapper-height-factor: calc(var(--board-size) * 3 / 10);
+  --message-center-top-margin: 1rem;
   --player-board-color: antiquewhite;
+  --reset-btn-height: 2.5rem;
+}
+
+body {
+  width: 100%;
+  position: fixed;
 }
 
 html {
   background-color: darkslategray;
+  width: 100%;
 }
 
 header {
-  height: 5rem;
+  height: var(--header-height);
   text-align: center;
   font-family: "Patua One";
   font-size: var(--header-text-size);
 }
 
 .game-wrapper {
+  height: calc(100% - var(--header-height));
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -71,18 +84,19 @@ header {
 
 #controls-wrapper {
   width: var(--board-size);
-  height: calc(var(--board-size) * 3 / 10);
-  margin: 1rem auto 1rem auto;
+  height: var(--controls-wrapper-height-factor);
+  margin: var(--controls-wrapper-margin);
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
 }
 
 #message-center {
   width: var(--board-size);
-  height: calc(var(--board-size) * 1.5 / 10);
+  height: var(--controls-wrapper-height);
   display: flex;
   gap: 5px;
-  margin-top: 1rem;
+  margin-top: var(--message-center-top-margin);
   flex-direction: column;
   justify-content: center;
   align-items: center;
@@ -95,6 +109,7 @@ header {
 
 #message-two {
   transition: opacity 0.5s linear;
+  text-align: center;
 }
 
 #placement-controls {
@@ -121,6 +136,9 @@ header {
   font-family: "Space Mono";
   text-align: center;
   font-size: 0.9rem;
+
+  border-radius: 0.25rem;
+  box-shadow: 5px 5px 25px 3px rgb(49, 49, 49);
 }
 
 .place-ship-control {
@@ -134,6 +152,9 @@ header {
   font-family: "Space Mono";
   text-align: center;
   font-size: 0.9rem;
+
+  border-radius: 0.25rem;
+  box-shadow: 5px 5px 25px 3px rgb(49, 49, 49);
 }
 
 #place-carrier {
@@ -159,7 +180,7 @@ header {
 #reset-btn {
   margin: auto;
   cursor: pointer;
-  height: 2.5rem;
+  height: var(--reset-btn-height);
   width: 7rem;
   background-color: var(--player-board-color);
   display: flex;
@@ -215,4 +236,20 @@ header {
 
 .place-button-enabled {
   background-color: green;
+}
+
+.btn-disabled {
+  opacity: 60%;
+}
+
+@media only screen and (max-width: 500px) {
+  :root {
+    --board-size: 80vw;
+    --header-text-size: 3rem;
+    --header-height: 3rem;
+    --controls-wrapper-margin: 0.25rem auto 0.5rem auto;
+    --controls-wrapper-height-factor: calc(var(--board-size) * 4 / 10);
+    --message-center-top-margin: 0.25rem;
+    --reset-btn-height: 1.75rem;
+  }
 }

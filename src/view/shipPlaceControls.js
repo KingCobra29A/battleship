@@ -110,11 +110,11 @@ function ShipPlaceControls() {
     );
     if (possible) {
       // Placement works
-      btn.classList.add("place-button-enabled");
+      btn.classList.remove("btn-disabled");
       displayPlacementPossibilityMessage(true);
     } else {
       // Placement doesnt work
-      btn.classList.remove("place-button-enabled");
+      btn.classList.add("btn-disabled");
       displayPlacementPossibilityMessage(false);
     }
   }
